@@ -22,40 +22,50 @@ last(X,[X]).
 
 display_game([], OddRow).
 display_game([Row | Board], 1):-
-    write('\\      '),
+    write(' \\  '),
     displayRow1(Row),
-    write(' \\____ '),
+    write('   \\'),
     displayRow2(Row),
+    write('    '),
+    displayRow3(Row),
     display_game(Board, 0).
 display_game([Row | Board], 0):-
     displayRow1(Row),
     displayRow2(Row),
+    displayRow3(Row),
     display_game(Board, 1).
 
 displayRow1([]):-
     nl.
 
 displayRow1([X | Row]):-
-    write(' /     \\      '),
+    write('   / \\  '),
     displayRow1(Row).
 
 displayRow2([]):-
     nl.
 
-displayRow2([0 | Row]):-
-    write('/       \\_____'),
+displayRow2([X | Row]):-
+    write(' /     \\'),
     displayRow2(Row).
 
-displayRow2([1 | Row]):-
-    write('/  RED  \\_____'),
-    displayRow2(Row).
+ displayRow3([]):-
+    nl.   
 
-displayRow2([2 | Row]):-
-    write('/ BLUE  \\_____'),
-    displayRow2(Row).
+displayRow3([0 | Row]):-
+    write('|       '),
+    displayRow3(Row).
 
-displayRow2([3 | Row]):-
-    write('/ YELLOW\\_____'),
-    displayRow2(Row).
+displayRow3([1 | Row]):-
+    write('|  RED  '),
+    displayRow3(Row).
+
+displayRow3([2 | Row]):-
+    write('| BLUE  '),
+    displayRow3(Row).
+
+displayRow3([3 | Row]):-
+    write('|YELLOW '),
+    displayRow3(Row).
 
 
