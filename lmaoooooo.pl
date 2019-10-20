@@ -14,22 +14,24 @@ board([
 
 disp:-
     board(X),
-    display_game(X, 1).
+    display_game(X, a).
+display_game(Board, Player):-
+    disp_game(Board, 1).
     
-display_game([], OddRow).
-display_game([Row | Board], 1):-
+disp_game([], OddRow).
+disp_game([Row | Board], 1):-
     write(' \\  '),
     displayRow1(Row),
     write('   \\'),
     displayRow2(Row),
     write('    '),
     displayRow3(Row),
-    display_game(Board, 0).
-display_game([Row | Board], 0):-
+    disp_game(Board, 0).
+disp_game([Row | Board], 0):-
     displayRow1(Row),
     displayRow2(Row),
     displayRow3(Row),
-    display_game(Board, 1).
+    disp_game(Board, 1).
 
 displayRow1([]):-
     nl.
