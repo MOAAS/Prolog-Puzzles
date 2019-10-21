@@ -1,3 +1,4 @@
+% 
 board([
      [0,0,0,0,0,1,1,0,0,0,0,0],
     [0,0,0,0,0,2,2,1,2,1,0,0],
@@ -15,10 +16,10 @@ board([
 disp:-
     board(X),
     display_game(X, a).
-display_game(Board, Player):-
+display_game(Board, _Player):-
     disp_game(Board, 1).
     
-disp_game([], OddRow).
+disp_game([], _OddRow).
 disp_game([Row | Board], 1):-
     write(' \\  '),
     displayRow1(Row),
@@ -36,18 +37,18 @@ disp_game([Row | Board], 0):-
 displayRow1([]):-
     nl.
 
-displayRow1([X | Row]):-
+displayRow1([_ | Row]):-
     write('   / \\  '),
     displayRow1(Row).
 
 displayRow2([]):-
     nl.
 
-displayRow2([X | Row]):-
+displayRow2([_ | Row]):-
     write(' /     \\'),
     displayRow2(Row).
 
- displayRow3([]):-
+displayRow3([]):-
     nl.   
 
 displayRow3([0 | Row]):-
@@ -55,15 +56,15 @@ displayRow3([0 | Row]):-
     displayRow3(Row).
 
 displayRow3([1 | Row]):-
-    write('|  RED  '),
+    write('|   X   '),
     displayRow3(Row).
 
 displayRow3([2 | Row]):-
-    write('| BLUE  '),
+    write('|   V   '),
     displayRow3(Row).
 
 displayRow3([3 | Row]):-
-    write('|YELLOW '),
+    write('|   O   '),
     displayRow3(Row).
 
 
