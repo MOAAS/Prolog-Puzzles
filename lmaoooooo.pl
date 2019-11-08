@@ -2,10 +2,9 @@
 
 /** ---- Test functions ---- **/
 
-test(X-Y):-
-    board(Board),
-    remove_pawn_at(X-Y, Board, NewBoard),
-    display_board(NewBoard).
+test(List):-
+    game(Board-_),
+    are_pawns_safe(List, Board).
 
 testplay:-
     game(Game),
@@ -28,6 +27,13 @@ disp:-
 
 /** ---- Utility functions ---- **/
 
+/* Checks if a list has duplicates
+Arguments:
+- List
+*/
+has_dup([X | L]):- member(X, L).
+has_dup([_ | L]):- has_dup(L).
+
 /* Replaces an element from a list
 Arguments:
 - List
@@ -44,7 +50,12 @@ replace([H | T], I, X, [H | R]):-
 
 /** ---- Game representation ---- **/
 
-% Represents current game Board-P1pawns-P2pawns
+
+
+% Represents current game Board-[P1pawns-P2pawns]
+
+board(Board):- game(Board-_).
+
 game(
 [
      [0,0,0,0,0,1,1,0,0,0,0,0],
@@ -52,16 +63,29 @@ game(
      [0,0,0,0,1,2,3,3,1,2,3,0],
     [0,0,0,0,0,3,2,3,2,1,3,0],
      [0,0,0,2,1,3,2,2,2,3,0,0],
-    [0,0,0,3,3,1,1,2,2,2,0,0],
-     [0,0,3,1,2,1,1,3,3,1,0,0],
+    [0,0,3,3,3,1,1,2,2,2,0,0],
+     [0,0,3,0,2,1,1,3,3,1,0,0],
     [0,0,0,3,1,3,3,2,2,2,2,0],
      [0,0,0,3,1,3,3,1,1,3,0,0],
     [0,0,0,0,1,2,1,1,2,3,0,0],
-     [0,0,0,0,0,0,0,0,0,0,0,0]
+     [0,0,0,0,0,0,0,0,1,0,0,0]
 ]-[[],[]]).
 
 /** ---- Gameplay ---- **/
 
+/* Gets board height
+Arguments:
+- Board
+- Returned height
+*/
+get_board_height(Board, Height):- length(Board, Height).
+
+/* Gets board width
+Arguments:
+- Board
+- Returned width
+*/
+get_board_width(Board, Width):- nth1(1, Board, Row), length(Row, Width).
 
 /* Gets pawn on specified coordinates on a board
 Arguments:
@@ -70,8 +94,23 @@ Arguments:
 - Returned Pawn
 */
 get_pawn_at(X-Y, Board, Pawn):-
+    get_board_height(Board, Height),
+    get_board_width(Board, Width),
+    Y > 0, X > 0, Y =< Height, X =< Width, !,
     nth1(Y, Board, Row),
     nth1(X, Row, Pawn).
+get_pawn_at(_-_, _, 0).
+
+/* Gets pawn on specified coordinate list on a board
+Arguments:
+- List of coordinates
+- Current board,
+- Returned Pawn list
+*/
+get_pawns_at([], _, []).
+get_pawns_at([X-Y | CoordList], Board, [Pawn | Pawns]):-
+    get_pawn_at(X-Y, Board, Pawn),
+    get_pawns_at(CoordList, Board, Pawns).
 
 /* Removes pawn on specified coordinates
 Arguments:
@@ -91,7 +130,7 @@ next_player(2, 1).
 /* Adds a pawn to a player's harvest
 Arguments:
 - Pawn to be added,
-- 1 or 2: Player who'll receive the pawn
+- 1 or 2: Player who'll receive the2 pawn
 - Pawn harvests
 - Returned pawn harvests (with the added pawn)
 */
@@ -101,14 +140,123 @@ add_pawn_to_player(TakenPawn, 1, [P1pawns, P2pawns], [NewP1pawns, P2pawns]):-
 add_pawn_to_player(TakenPawn, 2, [P1pawns, P2pawns], [P1pawns, NewP2pawns]):-
     append(P2pawns, [TakenPawn], NewP2pawns).
 
-% Toodooo
+/* Checks if pawns at specified coord list are safe
+Arguments:
+- Coordinate list
+- Current board
+*/
+are_pawns_safe([], _Board).
+are_pawns_safe([X-Y | Coords], Board):-
+    get_pawn_at(X-Y, Board, 0), !, % If no pawn in location, no reason to worry
+    are_pawns_safe(Coords, Board).
+are_pawns_safe([X-Y | Coords], Board):-
+    get_pawn_at(X-Y, Board, Pawn), % If there's a pawn...
+    get_pawns_around(X-Y, Board, Pawns),
+    safe_pawn_list(Pawn, Pawns),
+    are_pawns_safe(Coords, Board).
 
-%move(Move, Board, NewBoard). 
+/* Gets the (up to) 6 pawns around a location 
+Arguments:
+- X-Y: coordinates
+- Current board
+- Returned pawn list
+*/
+get_pawns_around(X-Y, Board, Pawns):-
+    get_coords_around(X-Y, CoordList),
+    get_pawns_at(CoordList, Board, AllPawns),
+    delete(AllPawns, 0, Pawns). % deletes empty cells
 
-%valid_move(X-Y, Board).
+/* Gets the 6 coordinates around a position
+Arguments:
+- X-Y: position
+- Current board
+- Returned list [Left,Right,BotLeft,TopLeft,BotRight,TopRight]
+*/
+get_coords_around(X-Y, CoordList):-
+    Y mod 2 =:= 0, % if Y is even
+    Xdec is X - 1,
+    Xinc is X + 1,
+    Yinc is Y + 1,
+    Ydec is Y - 1,
+    CoordList = [Xdec-Y,Xinc-Y,Xdec-Ydec,Xdec-Yinc,X-Ydec,X-Yinc].
 
-%valid_moves(Board, Player, ListOfMoves).
+get_coords_around(X-Y, CoordList):-
+    Y mod 2 =:= 1, % if Y is odd
+    Xdec is X - 1,
+    Xinc is X + 1,
+    Yinc is Y + 1,
+    Ydec is Y - 1,
+    CoordList = [Xdec-Y,Xinc-Y,X-Ydec,X-Yinc,Xinc-Ydec,Xinc-Yinc].
 
+/* Checks if a pawn list is enough to protect a pawn (2 equals or 3 total)
+Arguments:
+- Pawn list to check
+*/
+safe_pawn_list(_Pawn, Pawns):- length(Pawns, N), N >= 3, !.
+safe_pawn_list(Pawn, [Pawn, Pawn]).
+
+/* Checks if a move is valid
+Arguments:
+- X-Y: move (coordinates)
+- Current board
+*/
+valid_move(X-Y, Board):-
+    \+get_pawn_at(X-Y, Board, 0),
+    remove_pawn_at(X-Y, Board, NewBoard),
+    get_coords_around(X-Y, CoordList),
+    are_pawns_safe(CoordList, NewBoard).
+    
+/* Gets a list of valid moves
+Arguments:
+- Current board
+- Returned list of moves
+*/
+valid_moves(Board, _Player, ListOfMoves):-
+    get_valid_moves(Board, 1-1, ListOfMoves).
+
+/* Gets a list of valid moves, starting from a specified position
+Arguments:
+- Current board:
+- Current position to check
+- Returned list of moves
+*/
+get_valid_moves(_, 0-0, []).
+get_valid_moves(Board, X-Y, [X-Y | ListOfMoves]):-
+    valid_move(X-Y, Board), !, % If valid move
+    write(X-Y), nl,
+    next_cell(Board, X-Y, NextX-NextY),
+    get_valid_moves(Board, NextX-NextY, ListOfMoves).
+
+get_valid_moves(Board, X-Y, ListOfMoves):-
+    next_cell(Board, X-Y, NextX-NextY), % If not valid move
+    get_valid_moves(Board, NextX-NextY, ListOfMoves).
+
+
+/* Moves right or down the board, retrieving the next cell
+Arguments:
+- Board
+- X-Y: Coordinates
+- X-Y: Returned next coordinates
+*/
+next_cell(_, X-_, 0-0):- X =< 0, !.
+next_cell(_, _-Y, 0-0):- Y =< 0, !.
+next_cell(Board, X-Y, NextX-Y):-
+    get_board_width(Board, Width),
+    get_board_height(Board, Height),
+    X < Width, Y =< Height, !, % If (X < width && y <= height) 
+    NextX is X + 1.            %     return (x+1, y)
+
+next_cell(Board, _-Y, 1-NextY):-
+    get_board_height(Board, Height),
+    Y < Height, !, % Else if (Y < height) 
+    NextY is Y + 1. %acabaar
+next_cell(_, _-_, 0-0).
+
+
+
+    
+
+%move(Move, Board, NewBoard).
 /** ---- Game display ---- **/
 
 /* Displays state of the game
