@@ -11,6 +11,11 @@ testplay:-
     testloop(Game, 1).
 
 
+testplay2(X-Y,New):-
+    board(Board),
+    move(X-Y,Board,New),
+    display_board(New).
+    
 testloop(Board-Pawns, Player):-
     display_game(Board-Pawns, Player),
     read(X-Y),
@@ -69,7 +74,7 @@ game(
      [0,0,0,3,1,3,3,1,1,3,0,0],
     [0,0,0,0,1,2,1,1,2,3,0,0],
      [0,0,0,0,0,0,0,0,1,0,0,0]
-]-[[],[]]).
+]-[[],[]]).    
 
 /** ---- Gameplay ---- **/
 
@@ -187,13 +192,73 @@ get_coords_around(X-Y, CoordList):-
     Yinc is Y + 1,
     Ydec is Y - 1,
     CoordList = [Xdec-Y,Xinc-Y,X-Ydec,X-Yinc,Xinc-Ydec,Xinc-Yinc].
-
+ 
 /* Checks if a pawn list is enough to protect a pawn (2 equals or 3 total)
 Arguments:
 - Pawn list to check
 */
 safe_pawn_list(_Pawn, Pawns):- length(Pawns, N), N >= 3, !.
 safe_pawn_list(Pawn, [Pawn, Pawn]).
+
+/*
+game(
+[
+     [0,1,0,0,0,0,0],
+    [0,2,0,2,1,3,3],
+     [2,0,3,0,2,3,3]
+]-[[1,1,1,1,1,2,2,2,2,3,3,3,3,3],[]]).
+
+ttest(X):- 
+    game(Game),
+    game_over(Game,X).
+*/
+/* Checks if the game has ended, either by one person winning or having no valid moves
+- Game
+- Winning player or draw (0) in case there are no valid moves
+*/
+game_over(_Board-[P1pawns, _P2pawns],1):-
+    check_winner(P1pawns).
+
+game_over(_Board-[_P1pawns, P2pawns],2):-
+    check_winner(P2pawns).
+
+game_over(Board- _Pawns,0):-
+    valid_moves(Board,_,[]).
+
+/* Checks if given pawns are enough to win
+- Pawns to check
+*/
+check_winner(Pawns):-
+    count_type_pawns(Pawns,1,0,Res),Res>4,
+    count_type_pawns(Pawns,2,0,Res),Res>4,
+    count_type_pawns(Pawns,3,0,Res),Res>4.
+
+
+/* Counts how many paws are there of a certain type
+- Pawns
+-Type of Pawn
+-Inicial counter //depois é melhor tirar isto 
+-Result
+*/
+count_type_pawns([],_,Num,Res):- Res is Num.
+
+count_type_pawns([PawnType|Pawns],PawnType,Num,Res):-
+    Num1 is Num+1,
+    count_type_pawns(Pawns,PawnType,Num1,Res).
+
+count_type_pawns([Pawn|Pawns],PawnType,Num,Res):-
+    %write('testaaaaaaaaa'),
+    count_type_pawns(Pawns,PawnType,Num,Res).
+
+/* Makes a move if valid
+Arguments:
+- X-Y: move (coordinates)
+- Current board
+- Returned board, with move done
+*/
+move(X-Y, Board, NewBoard):-
+    valid_move(X-Y, Board),
+    remove_pawn_at(X-Y,Board, NewBoard).
 
 /* Checks if a move is valid
 Arguments:
