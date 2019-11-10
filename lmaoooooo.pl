@@ -32,6 +32,20 @@ disp:-
 
 /** ---- Utility functions ---- **/
 
+/* Counts how many elements of certain type are in list
+Arguments:
+- List
+- Element to search for
+- Returned number
+*/
+count_element([], _, 0).
+count_element([X | L], X, Res):-
+    count_element(L, X, Res1),
+    Res is Res1 + 1.
+count_element([Y | L], X, Res):-
+    X \= Y,
+    count_element(L, X, Res).
+
 /* Checks if a list has duplicates
 Arguments:
 - List
@@ -201,18 +215,20 @@ safe_pawn_list(_Pawn, Pawns):- length(Pawns, N), N >= 3, !.
 safe_pawn_list(Pawn, [Pawn, Pawn]).
 
 /*
-game(
+game2(
 [
-     [0,1,0,0,0,0,0],
-    [0,2,0,2,1,3,3],
-     [2,0,3,0,2,3,3]
+     [0,0,0,3,0,0,0],
+    [0,0,0,3,3,3,3],
+     [0,0,3,3,2,3,3]
 ]-[[1,1,1,1,1,2,2,2,2,3,3,3,3,3],[]]).
 
 ttest(X):- 
-    game(Game),
-    game_over(Game,X).
+    game2(Board-_Pawns),
+    game_over(Board, X).
 */
+
 /* Checks if the game has ended, either by one person winning or having no valid moves
+Arguments:
 - Game
 - Winning player or draw (0) in case there are no valid moves
 */
@@ -222,33 +238,17 @@ game_over(_Board-[P1pawns, _P2pawns],1):-
 game_over(_Board-[_P1pawns, P2pawns],2):-
     check_winner(P2pawns).
 
-game_over(Board- _Pawns,0):-
+game_over(Board-_Pawns, 0):-
     valid_moves(Board,_,[]).
 
 /* Checks if given pawns are enough to win
+Arguments:
 - Pawns to check
 */
 check_winner(Pawns):-
-    count_type_pawns(Pawns,1,0,Res),Res>4,
-    count_type_pawns(Pawns,2,0,Res),Res>4,
-    count_type_pawns(Pawns,3,0,Res),Res>4.
-
-
-/* Counts how many paws are there of a certain type
-- Pawns
--Type of Pawn
--Inicial counter //depois é melhor tirar isto 
--Result
-*/
-count_type_pawns([],_,Num,Res):- Res is Num.
-
-count_type_pawns([PawnType|Pawns],PawnType,Num,Res):-
-    Num1 is Num+1,
-    count_type_pawns(Pawns,PawnType,Num1,Res).
-
-count_type_pawns([Pawn|Pawns],PawnType,Num,Res):-
-    %write('testaaaaaaaaa'),
-    count_type_pawns(Pawns,PawnType,Num,Res).
+    count_element(Pawns, 1, Res1), Res1 > 4,
+    count_element(Pawns, 2, Res2), Res2 > 4,
+    count_element(Pawns, 3, Res3), Res3 > 4.
 
 /* Makes a move if valid
 Arguments:
@@ -285,7 +285,7 @@ Arguments:
 - Current position to check
 - Returned list of moves
 */
-get_valid_moves(_, 0-0, []).
+get_valid_moves(_, 0-0, []):- !.
 get_valid_moves(Board, X-Y, [X-Y | ListOfMoves]):-
     valid_move(X-Y, Board), !, % If valid move
     write(X-Y), nl,
@@ -318,10 +318,6 @@ next_cell(Board, _-Y, 1-NextY):-
 next_cell(_, _-_, 0-0).
 
 
-
-    
-
-%move(Move, Board, NewBoard).
 /** ---- Game display ---- **/
 
 /* Displays state of the game
