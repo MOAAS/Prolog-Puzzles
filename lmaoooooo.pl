@@ -91,6 +91,22 @@ game(
      [0,0,0,0,0,0,0,0,1,0,0,0]
 ]-[[],[]]).    
 
+ttest:-
+    make_board(11,11,FreshBoard),
+    display_board(FreshBoard).
+
+make_board(_,0,_):-!.    
+make_board(Width,Height,[Row|Board]):-
+    make_row(Width,Row),
+    Height1 is Height - 1,
+    make_board(Width,Height1,Board).
+
+make_row(0,_):-!. 
+make_row(Width,[0|Row]):-
+    Width1 is Width - 1,
+    make_row(Width1,Row).    
+
+
 /** ---- Gameplay ---- **/
 
 /* Gets board height
@@ -351,7 +367,7 @@ flood_fill(Board):-
     flood_fill_loop(Board,Xf-Yf,NewBoard), !, nl,
     \+member_board(NewBoard, 1),
     \+member_board(NewBoard, 2),
-    \+member_board(NewBoard, 3),
+    \+member_board(NewBoard, 3).
     %display_board(NewBoard).
     
 get_first_pawn(Board,X-Y,X-Y):-
