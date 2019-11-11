@@ -1,4 +1,5 @@
 :- use_module(library(lists)).
+:- use_module(library(random)).
 
 /** ---- Test functions ---- **/
 
@@ -269,7 +270,8 @@ valid_move(X-Y, Board):-
     \+get_pawn_at(X-Y, Board, 0),
     remove_pawn_at(X-Y, Board, NewBoard),
     get_coords_around(X-Y, CoordList),
-    are_pawns_safe(CoordList, NewBoard).
+    are_pawns_safe(CoordList, NewBoard),
+    flood_fill(NewBoard).
     
 /* Gets a list of valid moves
 Arguments:
@@ -316,6 +318,41 @@ next_cell(Board, _-Y, 1-NextY):-
     Y < Height, !, % Else if (Y < height) 
     NextY is Y + 1. %acabaar
 next_cell(_, _-_, 0-0).
+
+/* Gets value of board for player
+Arguments:
+- Board
+- Player
+- Returned value
+*/
+value(_Board-[P1pawns,_P2pawns], 1, Value):-
+    pawn_value(P1pawns, Value).
+
+value(_Board-[_P1pawns,P2pawns], 2, Value):-
+    pawn_value(P2pawns, Value).
+
+/* Gets value for pawn list
+Arguments:
+- Pawn list
+- Returned value
+*/
+pawn_value(Pawns, Value):-
+    count_element(Pawns, 1, Num1s),
+    count_element(Pawns, 2, Num2s),
+    count_element(Pawns, 3, Num3s),
+    Value is min(Num1s, 5) + min(Num2s, 5) + min(Num3s, 5).
+
+choose_move(Board, 0, Move):-
+    valid_moves(Board, _, Moves),
+    random_member(Move, Moves).
+
+choose_move(Board, 1, Move):-
+    valid_moves(Board, _, Moves),
+    best_move(Moves, Move).
+    
+%best_move([], ) todo
+
+    
 
 
 /** ---- Game display ---- **/
