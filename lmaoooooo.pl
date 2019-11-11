@@ -3,20 +3,56 @@
 
 /** ---- Test functions ---- **/
 
-test(List):-
-    game(Board-_),
-    are_pawns_safe(List, Board).
+testGame1(
+[
+     [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,0,2,2,1,2,1,0,0],
+     [0,0,0,0,1,2,3,3,1,2,3,0],
+    [0,0,0,0,0,3,2,3,2,1,3,0],
+     [0,0,0,2,1,3,2,2,2,3,0,0],
+    [0,0,3,3,3,1,1,2,2,2,0,0],
+     [0,0,3,0,2,1,1,3,3,1,0,0],
+    [0,0,0,3,1,3,3,2,2,2,2,0],
+     [0,0,0,3,1,3,3,1,1,3,0,0],
+    [0,0,0,0,1,2,1,1,2,3,0,0],
+     [0,0,0,0,0,0,0,0,1,0,0,0]
+]-[[1,1,1,1,3,3,3,2,2,2,2,3,3,3,1,1],[1,1,1,1,3,2,2,2,2,2,3,3,3,1,1]]).    
+
+testGameFlood(
+[
+     [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,0,2,2,1,2,1,0,0],
+     [0,0,0,0,1,2,3,3,1,2,3,0],
+    [0,0,0,0,0,3,2,3,2,1,3,0],
+     [0,0,0,2,1,3,2,2,2,0,0,0],
+    [0,0,3,0,3,1,1,3,3,3,0,0],
+     [0,3,3,0,2,1,3,3,3,3,0,0],
+    [0,0,0,3,0,0,0,0,0,0,3,0],
+     [0,0,0,3,3,3,3,3,3,3,3,0]
+]-[[],[]]).    
+
+testmustprint74:-
+    testGame1(Game),
+    choose_move(Game, 1, 1, X),
+    write(X).
+
+testmustprint73:-
+    testGame1(Game),
+    choose_move(Game, 2, 1, X),
+    write(X).
+
+testFloodMustPrintNo:-
+    testGameFlood(Board-_Pawns),
+    valid_move(10-7, Board).
+
+testFloodMustPrintYes:-
+    testGameFlood(Board-_Pawns),
+    valid_move(9-7, Board).
 
 testplay:-
-    game(Game),
+    testGame1(Game),
     testloop(Game, 1).
 
-
-testplay2(X-Y,New):-
-    board(Board),
-    move(X-Y,Board,New),
-    display_board(New).
-    
 testloop(Board-Pawns, Player):-
     display_game(Board-Pawns, Player),
     read(X-Y),
@@ -28,7 +64,7 @@ testloop(Board-Pawns, Player):-
 
 
 disp:-
-    game(Game),
+    testGame1(Game),
     display_game(Game, 1).
 
 /** ---- Utility functions ---- **/
@@ -68,28 +104,6 @@ replace([H | T], I, X, [H | R]):-
     replace(T, I1, X, R).
     
 
-/** ---- Game representation ---- **/
-
-
-
-% Represents current game Board-[P1pawns-P2pawns]
-
-board(Board):- game(Board-_).
-
-game(
-[
-     [0,0,0,0,0,1,1,0,0,0,0,0],
-    [0,0,0,0,0,2,2,1,2,1,0,0],
-     [0,0,0,0,1,2,3,3,1,2,3,0],
-    [0,0,0,0,0,3,2,3,2,1,3,0],
-     [0,0,0,2,1,3,2,2,2,3,0,0],
-    [0,0,3,3,3,1,1,2,2,2,0,0],
-     [0,0,3,0,2,1,1,3,3,1,0,0],
-    [0,0,0,3,1,3,3,2,2,2,2,0],
-     [0,0,0,3,1,3,3,1,1,3,0,0],
-    [0,0,0,0,1,2,1,1,2,3,0,0],
-     [0,0,0,0,0,0,0,0,1,0,0,0]
-]-[[],[]]).    
 
 ttest:-
     make_board(11,11,FreshBoard),
@@ -104,9 +118,7 @@ make_board(Width,Height,[Row|Board]):-
 make_row(0,_):-!. 
 make_row(Width,[0|Row]):-
     Width1 is Width - 1,
-    make_row(Width1,Row).    
-
-
+    make_row(Width1,Row).  
 /** ---- Gameplay ---- **/
 
 /* Gets board height
@@ -248,7 +260,7 @@ game_over(_Board-[_P1pawns, P2pawns],2):-
     check_winner(P2pawns).
 
 game_over(Board-_Pawns, 0):-
-    valid_moves(Board,_,[]).
+    valid_moves(Board, []).
 
 /* Checks if given pawns are enough to win
 Arguments:
@@ -262,12 +274,16 @@ check_winner(Pawns):-
 /* Makes a move if valid
 Arguments:
 - X-Y: move (coordinates)
+- Player to move
 - Current board
 - Returned board, with move done
 */
-move(X-Y, Board, NewBoard):-
+move(X-Y, Player, Board-Pawns, NewBoard-NewPawns):-
     valid_move(X-Y, Board),
-    remove_pawn_at(X-Y,Board, NewBoard).
+    get_pawn_at(X-Y, Board, Pawn),
+    add_pawn_to_player(Pawn, Player, Pawns, NewPawns),
+    remove_pawn_at(X-Y, Board, NewBoard).
+
 
 /* Checks if a move is valid
 Arguments:
@@ -279,14 +295,14 @@ valid_move(X-Y, Board):-
     remove_pawn_at(X-Y, Board, NewBoard),
     get_coords_around(X-Y, CoordList),
     are_pawns_safe(CoordList, NewBoard),
-    flood_fill(NewBoard).
+    check_single_section(NewBoard).
     
 /* Gets a list of valid moves
 Arguments:
 - Current board
 - Returned list of moves
 */
-valid_moves(Board, _Player, ListOfMoves):-
+valid_moves(Board, ListOfMoves):-
     get_valid_moves(Board, 1-1, ListOfMoves).
 
 /* Gets a list of valid moves, starting from a specified position
@@ -298,7 +314,6 @@ Arguments:
 get_valid_moves(_, 0-0, []):- !.
 get_valid_moves(Board, X-Y, [X-Y | ListOfMoves]):-
     valid_move(X-Y, Board), !, % If valid move
-    write(X-Y), nl,
     next_cell(Board, X-Y, NextX-NextY),
     get_valid_moves(Board, NextX-NextY, ListOfMoves).
 
@@ -350,26 +365,80 @@ pawn_value(Pawns, Value):-
     count_element(Pawns, 3, Num3s),
     Value is min(Num1s, 5) + min(Num2s, 5) + min(Num3s, 5).
 
-choose_move(Board, 0, Move):-
-    valid_moves(Board, _, Moves),
+/* Chooses a move for PC
+Arguments:
+- Game
+- Player to move
+- Difficulty (0 / 1)
+- Returned move
+*/
+choose_move(Board-_, _, 0, Move):- % For difficulty 0, picks random move
+    valid_moves(Board, Moves), 
     random_member(Move, Moves).
 
-choose_move(Board, 1, Move):-
-    valid_moves(Board, _, Moves),
-    best_move(Moves, Move).
-    
-%best_move([], ) todo
+choose_move(Board-Pawns, Player, 1, Move):- % For difficulty 1, picks best move in the current turn
+    valid_moves(Board, Moves),
+    best_move(Moves, Board-Pawns, Player, Move-_).
 
-% parte do doni 
+/* Chooses best move from list of moves
+Arguments:
+- Move list
+- Game
+- Player to move
+- BestMove-BestValue: Best move and its value
+*/    
+best_move([Move], Game, Player, Move-Value):- move_value(Move, Player, Game, Value).
+best_move([Move | Moves], Game, Player, BestMove-BestValue):- 
+    best_move(Moves, Game, Player, BestMoveRest-BestValueRest), % Gets best move-value of other moves
+    move_value(Move, Player, Game, Value), % Gets value of current move
+    compare_moves(Move-Value, BestMoveRest-BestValueRest, BestMove-BestValue). % Returns the best of the two moves
 
-flood_fill(Board):-
-    get_first_pawn(Board,1-1,Xf-Yf),
-    flood_fill_loop(Board,Xf-Yf,NewBoard), !, nl,
-    \+member_board(NewBoard, 1),
-    \+member_board(NewBoard, 2),
-    \+member_board(NewBoard, 3).
-    %display_board(NewBoard).
+/* Compares two moves, given their values
+Arguments:
+- Move1-Value1: Move 1 and its value
+- Move2-Value2: Move 2 and its value
+- BestMove-BestValue: Move-Value pair with the best value
+*/
+compare_moves(Move1-Value1, _Move2-Value2, Move1-Value1):- Value1 >= Value2.
+compare_moves(_Move1-Value1, Move2-Value2, Move2-Value2):- Value1 < Value2.
+
+/* Gets the value of a move
+Arguments:
+- Move
+- Game
+- Player
+- Returned value
+*/
+move_value(Move, Player, Game, Value):-
+    move(Move, Player, Game, NewGame),
+    value(NewGame, Player, Value).
+
+/* Returns yes if Board contains no seperate sections (using flood fill)
+Arguments:
+- Board
+*/
+check_single_section(Board):-
+    get_first_pawn(Board,1-1,Xf-Yf), % Gets a position where a pawn is located
+    flood_fill(Board,Xf-Yf,NewBoard), !, % Flood fills
+    \+board_contains(NewBoard, 1), % Board must not contain 1, 2 or 3's
+    \+board_contains(NewBoard, 2),
+    \+board_contains(NewBoard, 3).
+
+/* Returns yes if Board contains specified element
+Arguments:
+- Board
+- Element
+*/ 
+board_contains([Row | _Board], X):- member(X, Row).
+board_contains([_Row | Board],X):-
+    board_contains(Board, X).
     
+/* Gets the position of the first pawn in the board, starting from a specified pos
+Arguments:
+- Board
+- X-Y: Starting coordinates
+- X-Y: Returned coordinates
+*/    
 get_first_pawn(Board,X-Y,X-Y):-
     \+get_pawn_at(X-Y, Board,0).
 
@@ -377,26 +446,26 @@ get_first_pawn(Board,X-Y,Xf-Yf):-
     next_cell(Board,X-Y,X1-Y1),
     get_first_pawn(Board,X1-Y1,Xf-Yf).
 
-flood_fill_loop(Board,X-Y,NewBoard):-
+/* Applies flood fill on the board, painting it with -1's
+Arguments:
+- Board
+- X-Y: start coordinates
+- Returned board
+*/
+flood_fill(Board,X-Y,NewBoard):-
     \+get_pawn_at(X-Y, Board,0),
     \+get_pawn_at(X-Y, Board,-1), !,
     replace_pawn_at(X-Y,-1,Board,NewBoard0),
 
     get_coords_around(X-Y,[A,B,C,D,E,F]),
-    flood_fill_loop(NewBoard0, A, NewBoard1),
-    flood_fill_loop(NewBoard1, B, NewBoard2),
-    flood_fill_loop(NewBoard2, C, NewBoard3),
-    flood_fill_loop(NewBoard3, D, NewBoard4),
-    flood_fill_loop(NewBoard4, E, NewBoard5),
-    flood_fill_loop(NewBoard5, F, NewBoard).
+    flood_fill(NewBoard0, A, NewBoard1),
+    flood_fill(NewBoard1, B, NewBoard2),
+    flood_fill(NewBoard2, C, NewBoard3),
+    flood_fill(NewBoard3, D, NewBoard4),
+    flood_fill(NewBoard4, E, NewBoard5),
+    flood_fill(NewBoard5, F, NewBoard).
 
-flood_fill_loop(Board,_,Board).
-
-member_board([Row | _Board], X):- member(X, Row).
-member_board([_Row | Board],X):-
-    member_board(Board, X).
-
-% fim parte do doni
+flood_fill(Board,_,Board).
 
 /** ---- Game display ---- **/
 
@@ -409,7 +478,7 @@ display_game(Board-[P1pawns, P2pawns], Player):-
     display_board(Board),
     disp_p1_pawns(P1pawns),
     disp_p2_pawns(P2pawns),
-    disp_player_turn(Player).   
+    disp_player_turn(Player), !.
 
 % Displays player 1's pawns
 disp_p1_pawns(Pawns):-
