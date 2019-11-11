@@ -3,6 +3,21 @@
 
 /** ---- Test functions ---- **/
 
+standardGame(
+[
+     [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,0,2,2,1,2,1,0,0],
+     [0,0,0,0,1,2,3,3,1,2,3,0],
+    [0,0,0,0,0,3,2,3,2,1,3,0],
+     [0,0,0,2,1,3,2,2,2,3,0,0],
+    [0,0,3,3,3,1,1,2,2,2,0,0],
+     [0,0,3,0,2,1,1,3,3,1,0,0],
+    [0,0,0,3,1,3,3,2,2,2,2,0],
+     [0,0,0,3,1,3,3,1,1,3,0,0],
+    [0,0,0,0,1,2,1,1,2,3,0,0],
+     [0,0,0,0,0,0,0,0,1,0,0,0]
+]-[[],[]]).    
+
 testGame1(
 [
      [0,0,0,0,0,1,1,0,0,0,0,0],
@@ -49,20 +64,6 @@ testFloodMustPrintYes:-
     testGameFlood(Board-_Pawns),
     valid_move(9-7, Board).
 
-testplay:-
-    testGame1(Game),
-    testloop(Game, 1).
-
-testloop(Board-Pawns, Player):-
-    display_game(Board-Pawns, Player),
-    read(X-Y),
-    get_pawn_at(X-Y, Board, TakenPawn),
-    remove_pawn_at(X-Y, Board, NewBoard),
-    add_pawn_to_player(TakenPawn, Player, Pawns, NewPawns),
-    next_player(Player, NewPlayer),
-    testloop(NewBoard-NewPawns, NewPlayer).
-
-
 disp:-
     testGame1(Game),
     display_game(Game, 1).
@@ -102,23 +103,152 @@ replace([H | T], I, X, [H | R]):-
     I > 1,
     I1 is I - 1,
     replace(T, I1, X, R).
-    
 
-
-ttest:-
-    make_board(11,11,FreshBoard),
-    display_board(FreshBoard).
-
-make_board(_,0,_):-!.    
-make_board(Width,Height,[Row|Board]):-
-    make_row(Width,Row),
+/* Makes a board filled with 0's
+Arguments:
+- Width
+- Height
+- Returned board
+*/
+make_board(_,0,[]).    
+make_board(Width, Height, [Row|Board]):-
+    make_row(Width, Row),
     Height1 is Height - 1,
-    make_board(Width,Height1,Board).
+    make_board(Width, Height1, Board).
 
-make_row(0,_):-!. 
-make_row(Width,[0|Row]):-
+/* Makes a row filled with 0's
+Arguments:
+- Width
+- Returned row
+*/
+make_row(0, []). 
+make_row(Width, [0 | Row]):-
     Width1 is Width - 1,
     make_row(Width1,Row).  
+
+/** ---- Game loop ---- **/
+
+play:-
+    standardGame(Game), 
+    read_difficulty(Difficulty),
+    read_mode(Mode),
+    gameloop(Game, Mode, Difficulty, 1, Winner),
+    write_winner(Winner).
+
+write_winner(0):- write('There are no more valid moves. It\'s a tie!').
+write_winner(1):- write('Player 1 wins!').
+write_winner(2):- write('Player 2 wins!').
+
+/* Runs the game, on the defined Mode and Difficulty
+Arguments:
+- Current game
+- Game mode (0,1,2,3)
+- Difficulty / Level (0,1)
+- Player turn
+- Returned winner
+*/
+gameloop(Game, _Mode, _Difficulty, _Player, Winner):- game_over(Game, Winner), display_game(Game, 0), !.
+
+gameloop(Game, Mode, Difficulty, Player, Winner):-
+    display_game(Game, Player),
+    get_move(Game, Mode, Difficulty, Player, Move),
+    move(Move, Player, Game, NewGame),    
+    next_player(Player, NewPlayer),
+    gameloop(NewGame, Mode, Difficulty, NewPlayer, Winner).
+
+/* Gets a move for player, depending on difficulty and move
+Arguments:
+- Game
+- Mode
+- Difficulty (Level)
+- Player
+- Returned move
+*/
+% Mode 0: Human-Human -> Gets Input
+get_move(Game, 0, _Difficulty, _Player, Move):- read_move(Game, Move). 
+
+% Mode 1: Human-PC -> Gets Input for P1, CPU chooses for P2
+get_move(Game, 1, _Difficulty, 1, Move):- read_move(Game, Move).
+get_move(Game, 1, Difficulty, 2, Move):- choose_move(Game, 2, Difficulty, Move).
+
+% Mode 2: PC-Human -> Gets Input for P2, CPU chooses for P1
+get_move(Game, 2, Difficulty, 1, Move):- choose_move(Game, 1, Difficulty, Move).
+get_move(Game, 2, _Difficulty, 2, Move):- read_move(Game, Move).
+
+% Mode 3: PC-PC -> CPU chooses
+get_move(Game, 3, Difficulty, Player, Move):- choose_move(Game, Player, Difficulty, Move).
+
+
+/** ---- User input ---- **/    
+
+/* Reads Difficulty from keyboard, repeating until user types number from 0 to 1
+Arguments:
+- Returned Difficulty
+*/
+read_difficulty(Difficulty):-
+    repeat,
+        write('Choose CPU difficulty:'), nl,
+        write('- 0: Super Easy'), nl,
+        write('- 1: Very Easy'), nl,
+        catch(read(Difficulty), _Error, bad_difficulty_format),
+        validate_difficulty_format(Difficulty),
+    !.
+
+% Validate the difficulty input format
+validate_difficulty_format(Difficulty):- integer(Difficulty), Difficulty >= 0, Difficulty =< 1, !.
+validate_difficulty_format(_):- bad_difficulty_format.
+
+% Printing error message for read difficulty
+bad_difficulty_format:- write('Couldn\'t read difficulty.'), nl, fail.
+
+
+/* Reads mode from keyboard, repeating until user types number from 0 to 3
+Arguments:
+- Returned Mode
+*/
+read_mode(Mode):-
+    repeat,
+        write('Choose game mode:'), nl,
+        write('- 0: Human VS Human'), nl,
+        write('- 1: Human VS CPU'), nl,
+        write('- 2: CPU VS Human'), nl,
+        write('- 3: CPU VS CPU'), nl,
+        catch(read(Mode), _Error, bad_mode_format),
+        validate_mode_format(Mode),
+    !.
+
+% Validate the mode input format
+validate_mode_format(Mode):- integer(Mode), Mode >= 0, Mode =< 3, !.
+validate_mode_format(_):- bad_mode_format.
+
+% Printing error message for read mode
+bad_mode_format:- write('Couldn\'t read mode.'), nl, fail.
+
+/* Reads a move from the keyboard, repeating until the user enters valid coordinates
+Arguments:
+- Game
+- Returned coordinates
+*/
+read_move(Board-_Pawns, X-Y):-
+    repeat,
+        write('Type the coordinates in the format X-Y.'), nl,
+        catch(read(X-Y), _Error, bad_input_format),
+        validate_input_format(X-Y),
+        validate_input_move(X-Y, Board),
+    !.
+
+
+% Validate the move input format
+validate_input_format(X-Y):- integer(X), integer(Y), !.
+validate_input_format(_):- bad_input_format.
+
+% Printing error message for read move
+bad_input_format:- write('Couldn\'t read move.'), nl, fail.
+
+% Validate move in board
+validate_input_move(X-Y, Board):- valid_move(X-Y, Board), !.
+validate_input_move(_, _):- write('Invalid move, pieces around would not be safe'), nl, fail.
+
 /** ---- Gameplay ---- **/
 
 /* Gets board height
@@ -260,7 +390,8 @@ game_over(_Board-[_P1pawns, P2pawns],2):-
     check_winner(P2pawns).
 
 game_over(Board-_Pawns, 0):-
-    valid_moves(Board, []).
+    valid_moves(Board, Moves),
+    Moves = [].
 
 /* Checks if given pawns are enough to win
 Arguments:
@@ -518,8 +649,10 @@ Displays player turn
 Arguments:
 - player
 */
+disp_player_turn(0):- !.
 disp_player_turn(Player):- 
     write('Player '), write(Player), write(' turn '), nl.
+
 
 /*
 Displays board
