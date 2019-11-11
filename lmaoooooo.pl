@@ -142,6 +142,11 @@ remove_pawn_at(X-Y, Board, NewBoard):-
     replace(Row, X, 0, NewRow),
     replace(Board, Y, NewRow, NewBoard).
 
+replace_pawn_at(X-Y, NewPawn, Board, NewBoard):-
+    nth1(Y, Board, Row),
+    replace(Row, X, NewPawn, NewRow),
+    replace(Board, Y, NewRow, NewBoard).
+
 % Gets next player (1->2, 2->1)
 next_player(1, 2).
 next_player(2, 1).
@@ -317,6 +322,45 @@ next_cell(Board, _-Y, 1-NextY):-
     NextY is Y + 1. %acabaar
 next_cell(_, _-_, 0-0).
 
+ttest:- 
+    game(Board-_Pawns),
+    flood_fill(Board).
+
+
+flood_fill(Board):-
+    get_first_pawn(Board,1-1,Xf-Yf),
+    flood_fill_loop(Board,Xf-Yf,NewBoard), !, nl,
+    \+member_board(NewBoard, 1),
+    \+member_board(NewBoard, 2),
+    \+member_board(NewBoard, 3),
+    %display_board(NewBoard).
+    
+get_first_pawn(Board,X-Y,X-Y):-
+    \+get_pawn_at(X-Y, Board,0).
+
+get_first_pawn(Board,X-Y,Xf-Yf):-
+    next_cell(Board,X-Y,X1-Y1),
+    get_first_pawn(Board,X1-Y1,Xf-Yf).
+
+flood_fill_loop(Board,X-Y,NewBoard):-
+    \+get_pawn_at(X-Y, Board,0),
+    \+get_pawn_at(X-Y, Board,-1), !,
+    replace_pawn_at(X-Y,-1,Board,NewBoard0),
+
+    get_coords_around(X-Y,[A,B,C,D,E,F]),
+    flood_fill_loop(NewBoard0, A, NewBoard1),
+    flood_fill_loop(NewBoard1, B, NewBoard2),
+    flood_fill_loop(NewBoard2, C, NewBoard3),
+    flood_fill_loop(NewBoard3, D, NewBoard4),
+    flood_fill_loop(NewBoard4, E, NewBoard5),
+    flood_fill_loop(NewBoard5, F, NewBoard).
+
+flood_fill_loop(Board,_,Board).
+
+member_board([Row | _Board], X):- member(X, Row).
+member_board([_Row | Board],X):-
+    member_board(Board, X).
+
 
 /** ---- Game display ---- **/
 
@@ -359,6 +403,7 @@ disp_pawn(0):- write(' ').
 disp_pawn(1):- write('O').
 disp_pawn(2):- write('X').
 disp_pawn(3):- write('T').
+disp_pawn(-1):- write('P').
 
 
 
