@@ -3,21 +3,6 @@
 
 /** ---- Test functions ---- **/
 
-standardGame(
-[
-     [0,0,0,0,0,1,1,0,0,0,0,0],
-    [0,0,0,0,0,2,2,1,2,1,0,0],
-     [0,0,0,0,1,2,3,3,1,2,3,0],
-    [0,0,0,0,0,3,2,3,2,1,3,0],
-     [0,0,0,2,1,3,2,2,2,3,0,0],
-    [0,0,3,3,3,1,1,2,2,2,0,0],
-     [0,0,3,0,2,1,1,3,3,1,0,0],
-    [0,0,0,3,1,3,3,2,2,2,2,0],
-     [0,0,0,3,1,3,3,1,1,3,0,0],
-    [0,0,0,0,1,2,1,1,2,3,0,0],
-     [0,0,0,0,0,0,0,0,1,0,0,0]
-]-[[],[]]).    
-
 testGame1(
 [
      [0,0,0,0,0,1,1,0,0,0,0,0],
@@ -104,155 +89,15 @@ replace([H | T], I, X, [H | R]):-
     I1 is I - 1,
     replace(T, I1, X, R).
 
+/** ---- Settings ---- **/
 
-/* teste ultra fixe mt bom */
-ttest:-
-    make_board(12,11,FreshBoard),
-    get_random_center(12,11,X-Y),
-    insert_pieces(FreshBoard,FinalBoard,X-Y,25-25-25),
-    display_board(FinalBoard).
-
-
-/* Makes a board filled with 0's
-Arguments:
-- Width
-- Height
-- Returned board
-*/
-make_board(_,0,[]).    
-make_board(Width, Height, [Row|Board]):-
-    make_row(Width, Row),
-    Height1 is Height - 1,
-    make_board(Width, Height1, Board).
-
-/* Makes a row filled with 0's
-Arguments:
-- Width
-- Returned row
-*/
-make_row(0, []). 
-make_row(Width, [0 | Row]):-
-    Width1 is Width - 1,
-    make_row(Width1,Row).  
-
-
-/* Inserts pieces in the board in order to make a random island of pieces starting at a center
-Arguments:
-- Empty Board 
-- Returned Board
-- XC-YC coordinates of the starting point(center) of the island
-- R-G-B number of pieces for each color(Reds,Greens,Blues)
-*/
-insert_pieces(Board,FinalBoard,XC-YC,R-G-B):-
-    place_random_pawn(Board,NewBoard,XC-YC,R-G-B,NR-NG-NB),                   %inserts the center piece
-    get_coords_around(XC-YC,AroundCenter),                                    %gets coords around it
-    insert_pieces_loop(NewBoard,FinalBoard,AroundCenter,[XC-YC],NR-NG-NB,1).  %goes through the loop to insert the other pieces  
-
-
-/* Inserts pieces in the board in order to make a random island of pieces starting at a center
-   Each iteration places random pieces in the border of the previous iteration. When there are no pieces to make
-   a complete border,it places them close to previoes pieces but in a more chaotic manner.
-Arguments: 
-- Board 
-- Returned Board
-- PosList List of positions to put pieces in the current iteration
-- OldPosList List of positions of the last iteration, used in the last iteration.
-- R-G-B number of pieces for each color(Reds,Greens,Blues)
-- Currrent Iteration
-*/
-insert_pieces_loop(Board,Board,_,_,0-0-0,_).                                          %stops when there are no more pieces
-
-insert_pieces_loop(Board,FinalBoard,PosList,OldPosList,R-G-B,Iteration):-
-    Total is R+G+B,
-    Total > (Iteration*6-1),                                                            %if there are enough pieces letf to complete the border
-    place_random_pawns(Board,NewBoard,PosList,R-G-B,RF-GF-BF),                          %places pieces on border positions
-    get_coords_around(PosList,ClosePos),                                                %gets coords around them that will make the next border
-    delete(ClosePos, PosList, ClosePosClean),                                           %deletes some duplicates
-    Iteration1 is Iteration + 1, 
-    insert_pieces_loop(NewBoard,FinalBoard,ClosePosClean,PosList,RF-GF-BF,Iteration1).   
-
-insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,Iteration):-                      %last iteration - there are not enough pieces to complete a border,
-    length(PosList,Lng),                                                              %so they are placed randomly close to previous coords in this loop
-    random(0,Lng,Rnd),                                                                %until there are no more pieces
-    nth0(Rnd,PosList,Elem),                                                             %choses a random coord from the recently put pieces
-    get_coords_around(Elem,Aux),                                                        %gets coords around it
-    append([Elem],Aux,Aux2),                                                            %adds itself into a list
-    place_random_pawns(Board,NewBoard,Aux2,R-G-B,RF-GF-BF),                             %places random pieces from the coord list
-    get_coords_around(Aux2,ClosePos),                                                   %gets coords that can be chosen for the next loop
-    append(PosList,ClosePos,NewPosList),                                                %adds them to the pool of coords to be chosen
-    insert_pieces_loop(NewBoard,FinalBoard,_,NewPosList,RF-GF-BF,Iteration).
-
-/* Places a random pawn on a certain position depending on their availability
-Arguments:
-- Board 
-- Returned Board
-- X-Y position of the pawn
-- R-G-B number of pieces for each color(Reds,Greens,Blues) before putting the pawn
-- Returned R-G-B
-*/
-place_random_pawn(Board,NewBoard,X-Y,R-G-B,NR-NG-NB):-
-     random(1,4,Rnd),                                               %random number 1-3
-     place_random_aux(Board,NewBoard,X-Y,R-G-B,NR-NG-NB,Rnd).
-
-
-place_random_aux(Board,NewBoard,X-Y,0-G-B,NR-NG-NB,1):-            %if there are no pieces left of a certain type
-    place_random_aux(Board,NewBoard,X-Y,0-G-B,NR-NG-NB,2).         %it tries to place the next type
-place_random_aux(Board,NewBoard,X-Y,R-0-B,NR-NG-NB,2):-
-    place_random_aux(Board,NewBoard,X-Y,R-0-B,NR-NG-NB,3).
-place_random_aux(Board,NewBoard,X-Y,R-G-0,NR-NG-NB,3):-
-    place_random_aux(Board,NewBoard,X-Y,R-G-0,NR-NG-NB,1).
-
-place_random_aux(Board,NewBoard,X-Y,R-G-B,NR-G-B,1):-              %if there are pieces left,it places it on the board
-    replace_pawn_at(X-Y,1,Board,NewBoard),                         %and updates the number of pieces of that color
-    NR is R - 1.
-place_random_aux(Board,NewBoard,X-Y,R-G-B,R-NG-B,2):-
-    replace_pawn_at(X-Y,2,Board,NewBoard),
-    NG is G - 1.
-place_random_aux(Board,NewBoard,X-Y,R-G-B,R-G-NB,3):-
-    replace_pawn_at(X-Y,3,Board,NewBoard),
-    NB is B - 1.
-
-/* 
-Arguments: places random pawns on a list of position if the position is valid
-- Board 
-- Returned Board
-- PosList list of positions to put the random pawns on
-- R-G-B number of pieces for each color(Reds,Greens,Blues) before putting pawns
-- Returned R-G-B
-*/
-place_random_pawns(Board,Board,[],R-G-B,R-G-B).                        %if the PosList has no more Coords,stops
-
-place_random_pawns(Board,Board,_,0-0-0,0-0-0).                         %if there are no more pieces,stops
-
-place_random_pawns(Board,FinalBoard,[X-Y|PosList],R-G-B,Rf-Gf-Bf):-
-    inbounds(X-Y,Board),                                                    %checks if the Pos is inbounds
-    get_pawn_at(X-Y,Board,0),                                               %checks if the coord is still empty
-    place_random_pawn(Board,NewBoard,X-Y,R-G-B,Rn-Gn-Bn),                   %places a random pawn in that position
-    place_random_pawns(NewBoard,FinalBoard,PosList,Rn-Gn-Bn,Rf-Gf-Bf).
-place_random_pawns(Board,FinalBoard,[X-Y|PosList],R-G-B,Rf-Gf-Bf):-     %if the position is out-of-bound or not empty, skips to the next coord
-    place_random_pawns(Board,FinalBoard,PosList,R-G-B,Rf-Gf-Bf).
-
-
-/* Gets a random position for the center fromm 2/5 to 3/5 of each dimension
-Arguments:
-- Width 
-- Heigth
--Returned Position
-*/
-get_random_center(Width,Height,X-Y):-
-    WidthLow is Width*2/5,
-    WidthHigh is Width*3/5,
-    random(WidthLow,WidthHigh,X1), 
-    X is round(X1),                             %X esta entre (2/5*width) e (3/5* width)
-    HeightLow is Height*2/5,
-    HeightHigh is Height*3/5,
-    random(HeightLow,HeightHigh,Y1),            %Y esta entre (2/5*height) e (3/5* height)
-    Y is round(Y1).
+pieceConfig(19-19-19).
+boardDimensions(12-11).
 
 /** ---- Game loop ---- **/
 
 play:-
-    standardGame(Game), 
+    make_game(Game), 
     read_difficulty(Difficulty),
     read_mode(Mode),
     gameloop(Game, Mode, Difficulty, 1, Winner),
@@ -371,6 +216,155 @@ bad_input_format:- write('Couldn\'t read move.'), nl, fail.
 % Validate move in board
 validate_input_move(X-Y, Board):- valid_move(X-Y, Board), !.
 validate_input_move(_, _):- write('Invalid move, pieces around would not be safe'), nl, fail.
+
+/** Board building **/
+
+/* Randomly fills a board with pieces, returning a starting game
+Arguments:
+- Returned game structure (Board-[P1pawns, P2pawns])
+*/
+make_game(Board-[[],[]]):-
+    pieceConfig(PieceConfig), boardDimensions(Width-Height),
+    make_empty_board(Width, Height, EmptyBoard),
+    get_random_center(Width, Height, X-Y),
+    insert_pieces(EmptyBoard, Board, X-Y, PieceConfig).
+
+
+/* Makes a board without pawns (filled with 0's)
+Arguments:
+- Width
+- Height
+- Returned board
+*/
+make_empty_board(_,0,[]).    
+make_empty_board(Width, Height, [Row|Board]):-
+    make_row(Width, Row),
+    Height1 is Height - 1,
+    make_empty_board(Width, Height1, Board).
+
+/* Makes a row filled with 0's
+Arguments:
+- Width
+- Returned row
+*/
+make_row(0, []). 
+make_row(Width, [0 | Row]):-
+    Width1 is Width - 1,
+    make_row(Width1,Row).  
+
+
+/* Inserts pieces in the board in order to make a random island of pieces starting at a center
+Arguments:
+- Empty Board 
+- Returned Board
+- XC-YC coordinates of the starting point(center) of the island
+- R-G-B number of pieces for each color(Reds,Greens,Blues)
+*/
+insert_pieces(Board,FinalBoard,XC-YC,R-G-B):-
+    place_random_pawn(Board,NewBoard,XC-YC,R-G-B,NR-NG-NB),                   %inserts the center piece
+    get_coords_around(XC-YC,AroundCenter),                                    %gets coords around it
+    insert_pieces_loop(NewBoard,FinalBoard,AroundCenter,[XC-YC],NR-NG-NB,1).  %goes through the loop to insert the other pieces  
+
+
+/* Inserts pieces in the board in order to make a random island of pieces starting at a center
+   Each iteration places random pieces in the border of the previous iteration. When there are no pieces to make
+   a complete border,it places them close to previoes pieces but in a more chaotic manner.
+Arguments: 
+- Board 
+- Returned Board
+- PosList List of positions to put pieces in the current iteration
+- OldPosList List of positions of the last iteration, used in the last iteration.
+- R-G-B number of pieces for each color(Reds,Greens,Blues)
+- Currrent Iteration
+*/
+insert_pieces_loop(Board,Board,_,_,0-0-0,_).                                          %stops when there are no more pieces
+
+insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-
+    Total is R+G+B,
+    Total > (Iteration * 6),                                                            %if there are enough pieces letf to complete the border
+    place_random_pawns(Board,NewBoard,PosList,R-G-B,RF-GF-BF),                          %places pieces on border positions
+    get_coords_around(PosList,ClosePos),                                                %gets coords around them that will make the next border
+    delete(ClosePos, PosList, ClosePosClean),                                           %deletes some duplicates
+    Iteration1 is Iteration + 1, 
+    insert_pieces_loop(NewBoard,FinalBoard,ClosePosClean,PosList,RF-GF-BF,Iteration1).   
+
+insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,Iteration):-                      %last iteration - there are not enough pieces to complete a border,
+    length(PosList,Lng),                                                              %so they are placed randomly close to previous coords in this loop
+    random(0,Lng,Rnd),                                                                %until there are no more pieces
+    nth0(Rnd,PosList,Elem),                                                             %choses a random coord from the recently put pieces
+    get_coords_around(Elem,Aux),                                                        %gets coords around it
+    append([Elem],Aux,Aux2),                                                            %adds itself into a list
+    place_random_pawns(Board,NewBoard,Aux2,R-G-B,RF-GF-BF),                             %places random pieces from the coord list
+    get_coords_around(Aux2,ClosePos),                                                   %gets coords that can be chosen for the next loop
+    append(PosList,ClosePos,NewPosList),                                                %adds them to the pool of coords to be chosen
+    insert_pieces_loop(NewBoard,FinalBoard,_,NewPosList,RF-GF-BF,Iteration).
+
+/* Places a random pawn on a certain position depending on their availability
+Arguments:
+- Board 
+- Returned Board
+- X-Y position of the pawn
+- R-G-B number of pieces for each color(Reds,Greens,Blues) before putting the pawn
+- Returned R-G-B
+*/
+place_random_pawn(Board,NewBoard,X-Y,R-G-B,NR-NG-NB):-
+     random(1,4,Rnd),                                               %random number 1-3
+     place_random_aux(Board,NewBoard,X-Y,R-G-B,NR-NG-NB,Rnd).
+
+
+place_random_aux(Board,NewBoard,X-Y,0-G-B,NR-NG-NB,1):-            %if there are no pieces left of a certain type
+    place_random_aux(Board,NewBoard,X-Y,0-G-B,NR-NG-NB,2).         %it tries to place the next type
+place_random_aux(Board,NewBoard,X-Y,R-0-B,NR-NG-NB,2):-
+    place_random_aux(Board,NewBoard,X-Y,R-0-B,NR-NG-NB,3).
+place_random_aux(Board,NewBoard,X-Y,R-G-0,NR-NG-NB,3):-
+    place_random_aux(Board,NewBoard,X-Y,R-G-0,NR-NG-NB,1).
+
+place_random_aux(Board,NewBoard,X-Y,R-G-B,NR-G-B,1):-              %if there are pieces left,it places it on the board
+    replace_pawn_at(X-Y,1,Board,NewBoard),                         %and updates the number of pieces of that color
+    NR is R - 1.
+place_random_aux(Board,NewBoard,X-Y,R-G-B,R-NG-B,2):-
+    replace_pawn_at(X-Y,2,Board,NewBoard),
+    NG is G - 1.
+place_random_aux(Board,NewBoard,X-Y,R-G-B,R-G-NB,3):-
+    replace_pawn_at(X-Y,3,Board,NewBoard),
+    NB is B - 1.
+
+/* 
+Arguments: places random pawns on a list of position if the position is valid
+- Board 
+- Returned Board
+- PosList list of positions to put the random pawns on
+- R-G-B number of pieces for each color(Reds,Greens,Blues) before putting pawns
+- Returned R-G-B
+*/
+place_random_pawns(Board,Board,[],R-G-B,R-G-B).                        %if the PosList has no more Coords,stops
+
+place_random_pawns(Board,Board,_,0-0-0,0-0-0).                         %if there are no more pieces,stops
+
+place_random_pawns(Board,FinalBoard,[X-Y|PosList],R-G-B,Rf-Gf-Bf):-
+    inbounds(X-Y,Board),                                                    %checks if the Pos is inbounds
+    get_pawn_at(X-Y,Board,0),                                               %checks if the coord is still empty
+    place_random_pawn(Board,NewBoard,X-Y,R-G-B,Rn-Gn-Bn),                   %places a random pawn in that position
+    place_random_pawns(NewBoard,FinalBoard,PosList,Rn-Gn-Bn,Rf-Gf-Bf).
+place_random_pawns(Board,FinalBoard,[_|PosList],R-G-B,Rf-Gf-Bf):-     %if the position is out-of-bound or not empty, skips to the next coord
+    place_random_pawns(Board,FinalBoard,PosList,R-G-B,Rf-Gf-Bf).
+
+
+/* Gets a random position for the center fromm 2/5 to 3/5 of each dimension
+Arguments:
+- Width 
+- Heigth
+-Returned Position
+*/
+get_random_center(Width,Height,X-Y):-
+    WidthLow is Width*2/5,
+    WidthHigh is Width*3/5,
+    random(WidthLow,WidthHigh,X1), 
+    X is round(X1),                             %X esta entre (2/5*width) e (3/5* width)
+    HeightLow is Height*2/5,
+    HeightHigh is Height*3/5,
+    random(HeightLow,HeightHigh,Y1),            %Y esta entre (2/5*height) e (3/5* height)
+    Y is round(Y1).
 
 /** ---- Gameplay ---- **/
 
