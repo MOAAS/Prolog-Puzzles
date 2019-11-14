@@ -1,5 +1,6 @@
 :- use_module(library(lists)).
 :- use_module(library(random)).
+:- use_module(library(samsort)).
 
 /** ---- Test functions ---- **/
 
@@ -91,7 +92,7 @@ replace([H | T], I, X, [H | R]):-
 
 /** ---- Settings ---- **/
 
-pieceConfig(19-19-19).
+pieceConfig(21-21-21).
 boardDimensions(12-11).
 
 /** ---- Game loop ---- **/
@@ -435,10 +436,12 @@ Arguments:
 - Returned pawn harvests (with the added pawn)
 */
 add_pawn_to_player(TakenPawn, 1, [P1pawns, P2pawns], [NewP1pawns, P2pawns]):-
-    append(P1pawns, [TakenPawn], NewP1pawns).
+    append(P1pawns, [TakenPawn], NewP1pawnsUnsorted),
+    samsort(NewP1pawnsUnsorted, NewP1pawns).
 
 add_pawn_to_player(TakenPawn, 2, [P1pawns, P2pawns], [P1pawns, NewP2pawns]):-
-    append(P2pawns, [TakenPawn], NewP2pawns).
+    append(P2pawns, [TakenPawn], NewP2pawnsUnsorted),
+    samsort(NewP2pawnsUnsorted, NewP2pawns).
 
 /* Checks if pawns at specified coord list are safe
 Arguments:
