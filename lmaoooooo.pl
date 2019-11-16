@@ -273,7 +273,32 @@ Arguments:
 insert_pieces(Board,FinalBoard,XC-YC,R-G-B):-
     place_random_pawn(Board,NewBoard,XC-YC,R-G-B,NR-NG-NB),                   %inserts the center piece
     get_coords_around(XC-YC,AroundCenter),                                    %gets coords around it
-    insert_pieces_loop(NewBoard,FinalBoard,AroundCenter,[XC-YC],NR-NG-NB,3).  %goes through the loop to insert the other pieces  
+    insert_pieces_loop(NewBoard,CompleteBoard,AroundCenter,[XC-YC],NR-NG-NB,3),  %goes through the loop to insert the other pieces f
+    remove_invalid_pieces(CompleteBoard,FinalBoard). 
+
+
+/* Removes invalid pieces from a board
+Arguments:
+- Board
+- Returned Board
+*/
+remove_invalid_pieces(Board,FinalBoard):-
+    remove_invalid_pieces_aux(Board,FinalBoard,1-1).
+
+/* Removes invalid pieces from a board
+Arguments:
+- Board
+- Returned Board
+- Current Position
+*/
+remove_invalid_pieces_aux(Board,Board,0-0):-!.              %ends only when completes the board with no unsafe pieces
+remove_invalid_pieces_aux(Board,FinalBoard,X-Y):-
+    \+are_pawns_safe([X-Y],Board),                           %if piece is not safe
+    replace_pawn_at(X-Y,0,Board,NewBoard),                   %removes it
+    remove_invalid_pieces_aux(NewBoard,FinalBoard,1-1).      %starts from the begining
+remove_invalid_pieces_aux(Board,FinalBoard,X-Y):-            %if piece is safe goes to the nest piece
+    next_cell(Board,X-Y,NextX-NextY),   
+    remove_invalid_pieces_aux(Board,FinalBoard,NextX-NextY). 
 
 
 /* Inserts pieces in the board in order to make a random island of pieces starting at a center
@@ -290,27 +315,22 @@ Arguments:
 insert_pieces_loop(Board,Board,_,_,0-0-0,_).                                          %stops when there are no more pieces
 
 insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                             %Seconds fase - there are not enough pieces to complete a border,
-    length(PosList,Lng),                                                              %so they are placed randomly close to previous coords in this loop
-    random(0,Lng,Rnd),                                                                %until there are no more pieces
+    length(PosList,Lng),                                                                %so they are placed randomly close to previous coords in this loop
+    random(0,Lng,Rnd),                                                                  %until there are no more pieces
     nth0(Rnd,PosList,Elem),                                                             %choses a random coord from the recently put pieces
     get_coords_around(Elem,Aux),                                                        %gets coords around it
     append([Elem],Aux,Aux2),                                                            %adds itself into a list
     place_random_pawns(Board,NewBoard,Aux2,R-G-B,RF-GF-BF),                             %places random pieces from the coord list
-    
-    %are_pawns_safe(Aux2,NewBoard),
-
     get_coords_around(Aux2,ClosePos),                                                   %gets coords that can be chosen for the next loop
     append(PosList,ClosePos,NewPosList),                                                %adds them to the pool of coords to be chosen
     insert_pieces_loop(NewBoard,FinalBoard,_,NewPosList,RF-GF-BF,0).
 
-insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-
-    write('alaaaddasdsadsadsa').
 
 insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-                        %first Fase                              
     place_random_pawns(Board,NewBoard,PosList,R-G-B,RF-GF-BF),                          %places pieces on border positions
-    get_coords_around(PosList,ClosePos),                                                %gets coords around them that will make the next border
-    delete(ClosePos, PosList, ClosePosClean),                                           %deletes some duplicates
-    %remove_duplicates(ClosePos,ClosePosClean),
+    get_coords_around(PosList,ClosePos),                                                %gets coords around them that will make the next border 
+    length(ClosePos,Len),
+    remove_duplicates(ClosePos,ClosePosClean),                                          %deletes some duplicates
     Iteration1 is Iteration - 1, 
     insert_pieces_loop(NewBoard,FinalBoard,ClosePosClean,PosList,RF-GF-BF,Iteration1).
 
