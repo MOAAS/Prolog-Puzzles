@@ -106,8 +106,8 @@ boardDimensions(12-11).
 
 play:-
     make_game(Game), 
-    read_difficulty(Difficulty),
     read_mode(Mode),
+    read_difficulty(Mode, Difficulty),
     gameloop(Game, Mode, Difficulty, 1, Winner),
     write_winner(Winner).
 
@@ -128,6 +128,7 @@ gameloop(Game, _Mode, _Difficulty, _Player, Winner):- game_over(Game, Winner), d
 gameloop(Game, Mode, Difficulty, Player, Winner):-
     display_game(Game, Player),
     get_move(Game, Mode, Difficulty, Player, Move),
+    display_move(Move, Player),
     move(Move, Player, Game, NewGame),    
     next_player(Player, NewPlayer),
     gameloop(NewGame, Mode, Difficulty, NewPlayer, Winner).
@@ -154,14 +155,25 @@ get_move(Game, 2, _Difficulty, 2, Move):- read_move(Game, Move).
 % Mode 3: PC-PC -> CPU chooses
 get_move(Game, 3, Difficulty, Player, Move):- choose_move(Game, Player, Difficulty, Move).
 
+/* Displays a move in the format: Player Z has captured the piece at: X-Y
+Arguments:
+- Move
+- Player
+*/
+display_move(Move, Player):- write('Player '),  write(Player), write(' has captured the piece at: '), write(Move), nl.
+
 
 /** ---- User input ---- **/    
 
 /* Reads Difficulty from keyboard, repeating until user types number from 0 to 1
+If mode is 0 (Human VS Human, returns 0, as there's no need for difficulty setting)
 Arguments:
+- Input mode
 - Returned Difficulty
 */
-read_difficulty(Difficulty):-
+read_difficulty(0, 0).
+read_difficulty(Mode, Difficulty):-
+    Mode \= 0,
     repeat,
         write('Choose CPU difficulty:'), nl,
         write('- 0: Super Easy'), nl,
