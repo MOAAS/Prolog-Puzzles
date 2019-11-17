@@ -4,6 +4,13 @@
 
 /** ---- Test functions ---- **/
 
+test:-
+    pieceConfig(PieceConfig), boardDimensions(Width-Height),
+    make_empty_board(Width, Height, EmptyBoard),
+    get_random_center(Width, Height, X-Y),
+    insert_pieces(EmptyBoard, Board, X-Y, PieceConfig),
+    display_board(Board).
+
 testGame1(
 [
      [0,0,0,0,0,1,1,0,0,0,0,0],
@@ -231,13 +238,6 @@ make_game(Board-[[],[]]):-
     insert_pieces(EmptyBoard, Board, X-Y, PieceConfig).
 
 
-test:-
-    pieceConfig(PieceConfig), boardDimensions(Width-Height),
-    make_empty_board(Width, Height, EmptyBoard),
-    get_random_center(Width, Height, X-Y),
-    insert_pieces(EmptyBoard, Board, X-Y, PieceConfig),
-    display_board(Board).
-
 /* Makes a board without pawns (filled with 0's)
 Arguments:
 - Width
@@ -328,8 +328,7 @@ insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                        
 
 insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-                       %first Fase                              
     place_random_pawns(Board,NewBoard,PosList,R-G-B,RF-GF-BF),                          %places pieces on border positions
-    get_coords_around(PosList,ClosePos),                                                %gets coords around them that will make the next border 
-    length(ClosePos,Len),
+    get_coords_around(PosList,ClosePos),         
     remove_duplicates(ClosePos,ClosePosClean),                                          %deletes some duplicates
     Iteration1 is Iteration - 1, 
     insert_pieces_loop(NewBoard,FinalBoard,ClosePosClean,PosList,RF-GF-BF,Iteration1).
@@ -518,7 +517,7 @@ Arguments:
 - Current board
 - Returned list [Left,Right,BotLeft,TopLeft,BotRight,TopRight]
 */
-get_coords_around([],_).
+get_coords_around([],[]).
 get_coords_around([X-Y|PosList],[A,B,C,D,E,F|ClosePosList]):-
     get_coords_around(X-Y,[A,B,C,D,E,F]),
     get_coords_around(PosList,ClosePosList).
@@ -841,7 +840,7 @@ Arguments:
 display_board([Row | Board]):-
     disp_board_first(Row),            %disp hex board
     disp_board_general(Board, 0, 2),      %starts from 2nd row
-    disp_board_last(Board).         %completes missing part of last hex row
+    disp_board_last([Row | Board]).         %completes missing part of last hex row
 
 /*
 Displays board's first row
@@ -985,25 +984,23 @@ displayCoord(V):-
 
 
 /*
-Completes last row 
+Completes last row display
 Arguments:
 - Full Board
 */
-
-
 disp_board_last(Board):- %prints the missing characters to complete the last row hexagon pattern
-    boardDimensions(_Width-Height),
+    get_board_height(Board, Height),
     Even is Height mod 2,
     disp_board_last_aux(Board,Even).
     
 
 /*
-Completes last row 
+Completes last row display 
 Arguments:
 - Full Board
 - 1 if odd row, 0 otherwise
 */
-disp_board_last_aux([[_Row | SmallerRow] | Board],0):-
+disp_board_last_aux([[_Row | SmallerRow] | _Board], 0):-
     write(' \\  '),         %first print line
     displayRow1(SmallerRow),    %prints rowsize - 1 iterations 
     write('   /'),
@@ -1014,7 +1011,7 @@ disp_board_last_aux([[_Row | SmallerRow] | Board],0):-
     write(' /'),        
     nl.
 
-disp_board_last_aux([[_Row | SmallerRow] | Board],1):-
+disp_board_last_aux([[_Row | SmallerRow] | _Board], 1):-
     write('     \\  '),         %first print line
     displayRow1(SmallerRow),    %prints rowsize - 1 iterations 
     write('   /'),
