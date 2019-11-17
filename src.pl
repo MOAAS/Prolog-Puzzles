@@ -265,7 +265,7 @@ Arguments:
 - R-G-B number of pieces for each color(Reds,Greens,Blues)
 - Number of 1st fase iterations
 */
-insert_pieces_loop(Board,Board,_,_,0-0-0,_).                                          %stops when there are no more pieces
+insert_pieces_loop(Board,Board,_,_,0-0-0,_).                                         %stops when there are no more pieces
 
 insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                             %Seconds fase 
     length(PosList,Lng),                                                                %so they are placed randomly close to previous coords in this loop
@@ -276,24 +276,15 @@ insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                        
     place_random_pawns(Board,NewBoard,Aux2,R-G-B,RF-GF-BF),                             %places random pieces from the coord list
     get_coords_around(Aux2,ClosePos),                                                   %gets coords that can be chosen for the next loop
     append(PosList,ClosePos,NewPosList),                                                %adds them to the pool of coords to be chosen
-    insert_pieces_loop(NewBoard,FinalBoard,_,NewPosList,RF-GF-BF,0).
+    remove_dups(NewPosList,PosListClean),                                               %removes some duplicates 
+    insert_pieces_loop(NewBoard,FinalBoard,_,PosListClean,RF-GF-BF,0).
 
-
-insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-                       %first Fase                              
+insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-                     %first Fase                              
     place_random_pawns(Board,NewBoard,PosList,R-G-B,RF-GF-BF),                          %places pieces on border positions
-    get_coords_around(PosList,ClosePos),         
-    remove_duplicates(ClosePos,ClosePosClean),                                          %deletes some duplicates
+    get_coords_around(PosList,ClosePos),                            
+    remove_dups(ClosePos,ClosePosClean),                                                %removes some duplicates 
     Iteration1 is Iteration - 1, 
     insert_pieces_loop(NewBoard,FinalBoard,ClosePosClean,PosList,RF-GF-BF,Iteration1).
-
-
-remove_duplicates([], []).
-remove_duplicates([Head | Tail], Result) :-
-    member(Head, Tail),!,
-    remove_duplicates(Tail, Result).
-
-remove_duplicates([Head | Tail], [Head | Result]) :-
-    remove_duplicates(Tail, Result).
 
 /* Places a random pawn on a certain position depending on their availability
 Arguments:
