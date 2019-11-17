@@ -314,7 +314,7 @@ Arguments:
 */
 insert_pieces_loop(Board,Board,_,_,0-0-0,_).                                          %stops when there are no more pieces
 
-insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                             %Seconds fase - there are not enough pieces to complete a border,
+insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                             %Seconds fase 
     length(PosList,Lng),                                                                %so they are placed randomly close to previous coords in this loop
     random(0,Lng,Rnd),                                                                  %until there are no more pieces
     nth0(Rnd,PosList,Elem),                                                             %choses a random coord from the recently put pieces
@@ -326,7 +326,7 @@ insert_pieces_loop(Board,FinalBoard,_,PosList,R-G-B,0):-                        
     insert_pieces_loop(NewBoard,FinalBoard,_,NewPosList,RF-GF-BF,0).
 
 
-insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-                        %first Fase                              
+insert_pieces_loop(Board,FinalBoard,PosList,_,R-G-B,Iteration):-                       %first Fase                              
     place_random_pawns(Board,NewBoard,PosList,R-G-B,RF-GF-BF),                          %places pieces on border positions
     get_coords_around(PosList,ClosePos),                                                %gets coords around them that will make the next border 
     length(ClosePos,Len),
