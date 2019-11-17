@@ -2,65 +2,6 @@
 :- use_module(library(random)).
 :- use_module(library(samsort)).
 
-/** ---- Test functions ---- **/
-
-test:-
-    pieceConfig(PieceConfig), boardDimensions(Width-Height),
-    make_empty_board(Width, Height, EmptyBoard),
-    get_random_center(Width, Height, X-Y),
-    insert_pieces(EmptyBoard, Board, X-Y, PieceConfig),
-    display_board(Board).
-
-testGame1(
-[
-     [0,0,0,0,0,1,1,0,0,0,0,0],
-    [0,0,0,0,0,2,2,1,2,1,0,0],
-     [0,0,0,0,1,2,3,3,1,2,3,0],
-    [0,0,0,0,0,3,2,3,2,1,3,0],
-     [0,0,0,2,1,3,2,2,2,3,0,0],
-    [0,0,3,3,3,1,1,2,2,2,0,0],
-     [0,0,3,0,2,1,1,3,3,1,0,0],
-    [0,0,0,3,1,3,3,2,2,2,2,0],
-     [0,0,0,3,1,3,3,1,1,3,0,0],
-    [0,0,0,0,1,2,1,1,2,3,0,0],
-     [0,0,0,0,0,0,0,0,1,0,0,0]
-]-[[1,1,1,1,3,3,3,2,2,2,2,3,3,3,1,1],[1,1,1,1,3,2,2,2,2,2,3,3,3,1,1]]).    
-
-testGameFlood(
-[
-     [0,0,0,0,0,1,1,0,0,0,0,0],
-    [0,0,0,0,0,2,2,1,2,1,0,0],
-     [0,0,0,0,1,2,3,3,1,2,3,0],
-    [0,0,0,0,0,3,2,3,2,1,3,0],
-     [0,0,0,2,1,3,2,2,2,0,0,0],
-    [0,0,3,0,3,1,1,3,3,3,0,0],
-     [0,3,3,0,2,1,3,3,3,3,0,0],
-    [0,0,0,3,0,0,0,0,0,0,3,0],
-     [0,0,0,3,3,3,3,3,3,3,3,0]
-]-[[],[]]).    
-
-testmustprint74:-
-    testGame1(Game),
-    choose_move(Game, 1, 1, X),
-    write(X).
-
-testmustprint73:-
-    testGame1(Game),
-    choose_move(Game, 2, 1, X),
-    write(X).
-
-testFloodMustPrintNo:-
-    testGameFlood(Board-_Pawns),
-    valid_move(10-7, Board).
-
-testFloodMustPrintYes:-
-    testGameFlood(Board-_Pawns),
-    valid_move(9-7, Board).
-
-disp:-
-    testGame1(Game),
-    display_game(Game, 1).
-
 /** ---- Utility functions ---- **/
 
 /* Counts how many elements of certain type are in list
@@ -176,8 +117,8 @@ read_difficulty(Mode, Difficulty):-
     Mode \= 0,
     repeat,
         write('Choose CPU difficulty:'), nl,
-        write('- 0: Super Easy'), nl,
-        write('- 1: Very Easy'), nl,
+        write('- 0: Easy'), nl,
+        write('- 1: Normal'), nl,
         catch(read(Difficulty), _Error, bad_difficulty_format),
         validate_difficulty_format(Difficulty),
     !.
