@@ -1,5 +1,7 @@
 :- use_module(library(clpfd)).
+:- use_module(library(random)).
 
+/* Solver */
 validPuzzle([], 0, 0).
 validPuzzle([weight(Distance, Weight) | Puzzle], Torque, Total):-
     NewTorque #= Torque + Distance * Weight,
@@ -17,11 +19,34 @@ validPuzzle(Puzzle):- validPuzzle(Puzzle, 0, _).
 getPuzzleSize([], 0).
 getPuzzleSize([weight(_, _) | Puzzle], Size):-
     getPuzzleSize(Puzzle, SubSize),
-    Size is SubSize + 1.
+    Size #= SubSize + 1.
 getPuzzleSize([branch(_, Weights) | Puzzle], Size):-
     getPuzzleSize(Weights, BranchSize),
     getPuzzleSize(Puzzle, SubSize),
-    Size is SubSize + BranchSize.
+    Size #= SubSize + BranchSize.
+
+unifyPuzzleVars([], Vars, Vars).
+unifyPuzzleVars([weight(_, Var) | Puzzle], [Var | Vars], NotUnified):-
+    unifyPuzzleVars(Puzzle, Vars, NotUnified).
+unifyPuzzleVars([branch(_, Weights) | Puzzle], Vars, NotUnified):-
+    unifyPuzzleVars(Weights, Vars, BranchNotUnified),
+    unifyPuzzleVars(Puzzle, BranchNotUnified, NotUnified).
+
+solvePuzzle(Puzzle, Solution):-
+    getPuzzleSize(Puzzle, PuzzleSize),
+    length(Solution, PuzzleSize),
+    unifyPuzzleVars(Puzzle, Solution, []),
+    domain(Solution, 1, PuzzleSize),
+    all_distinct(Solution),
+    validPuzzle(Puzzle),
+    labeling([], Solution).
+
+solver:-
+    puzzle8(Puzzle),
+    solvePuzzle(Puzzle, Solution),
+    write(Solution).
+
+/* Puzzles */
 
 puzzleDefault([
     weight(-3, _),
@@ -49,17 +74,6 @@ puzzle8([
         weight(2, _)
     ])
 ]).
-
-solvePuzzle:-
-    puzzle8(Puzzle),
-    getPuzzleSize(Puzzle, PuzzleSize),
-    length(Vars, PuzzleSize),
-    domain(Vars, 1, PuzzleSize),
-    all_distinct(Vars),
-    validPuzzle(Puzzle),
-    labeling([], Vars),
-    write(Vars).
-
 
 
 
