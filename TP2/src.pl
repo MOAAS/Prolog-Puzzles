@@ -46,6 +46,16 @@ solver:-
     solvePuzzle(Puzzle, Solution),
     write(Solution).
 
+/*
+makePuzzle(Size, Puzzle, Solution):-
+    length(Solution, Size),
+    unifyPuzzleVars(Puzzle, Solution, []),
+    domain(Solution, 1, Size),
+    all_distinct(Solution),
+    validPuzzle(Puzzle),
+    labeling([], Solution).
+    */
+
 /* Puzzles */
 
 puzzleDefault([
