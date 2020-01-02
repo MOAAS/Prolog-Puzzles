@@ -1,5 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(random)).
+:- use_module(library(lists)).
+:-consult('display.pl').
 
 /* Solver */
 validPuzzle([], 0, 0).
@@ -272,6 +274,10 @@ makePuzzle(PuzzleSize, Puzzle, Weights):-
     write(Puzzle).
 */
 
+testprint:-
+    puzzle6s(Puzzle),
+    printPuzzle(Puzzle).
+
 /* Puzzles */
 
 puzzleDefault([
@@ -301,6 +307,33 @@ puzzle8([
     ])
 ]).
 
+
+
+puzzle6([
+    weight(-3,_),
+    weight(-2,_),
+    branch(1,[
+        branch(-1,[
+            weight(-3,_),
+            weight(1,_)
+        ]),
+        weight(1,_)
+    ]),
+    weight(2,_)
+]).
+
+puzzle6s([
+    weight(-3,3),
+    weight(-2,1),
+    branch(1,[
+        branch(-1,[
+            weight(-3,5),
+            weight(1,2)
+        ]),
+        weight(1,6)
+    ]),
+    weight(2,4)
+]).
 
 puzzle20([
     branch(-4, [
