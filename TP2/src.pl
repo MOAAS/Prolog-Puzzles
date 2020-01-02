@@ -16,6 +16,15 @@ validPuzzle([branch(Distance, Weights) | Puzzle], Torque, Total):-
 
 validPuzzle(Puzzle):- validPuzzle(Puzzle, 0, _).
 
+
+getPuzzleVars([], []).
+getPuzzleVars([weight(_Distance, Weight) | Puzzle], [Weight | Vars]):-
+    getPuzzleVars(Puzzle, Vars).
+getPuzzleVars([branch(_Distance, Weights) | Puzzle], Vars):-
+    getPuzzleVars(Weights, BranchVars),
+    append(BranchVars, SubVars, Vars),
+    getPuzzleVars(Puzzle, SubVars).
+/*
 getPuzzleSize([], 0).
 getPuzzleSize([weight(_, _) | Puzzle], Size):-
     getPuzzleSize(Puzzle, SubSize),
@@ -31,30 +40,73 @@ unifyPuzzleVars([weight(_, Var) | Puzzle], [Var | Vars], NotUnified):-
 unifyPuzzleVars([branch(_, Weights) | Puzzle], Vars, NotUnified):-
     unifyPuzzleVars(Weights, Vars, BranchNotUnified),
     unifyPuzzleVars(Puzzle, BranchNotUnified, NotUnified).
+*/
 
 solvePuzzle(Puzzle, Solution):-
-    getPuzzleSize(Puzzle, PuzzleSize),
+    getPuzzleVars(Puzzle, Solution),
     length(Solution, PuzzleSize),
-    unifyPuzzleVars(Puzzle, Solution, []),
     domain(Solution, 1, PuzzleSize),
     all_distinct(Solution),
     validPuzzle(Puzzle),
     labeling([], Solution).
 
 solver:-
-    puzzle20(Puzzle),
-    solvePuzzle(Puzzle, Solution),
-    write(Solution).
+    puzzle8(Puzzle8),
+    puzzle20(Puzzle20),
+    solvePuzzle(Puzzle8, Solution8),
+    solvePuzzle(Puzzle20, Solution20),
+    write('Puzzle 8 solution: '), write(Solution8), nl,
+    write('Puzzle 20 solution: '), write(Solution20), nl.
 
-/*
-makePuzzle(Size, Puzzle, Solution):-
-    length(Solution, Size),
-    unifyPuzzleVars(Puzzle, Solution, []),
-    domain(Solution, 1, Size),
-    all_distinct(Solution),
+
+/* Maker */  
+
+randomPuzzleMaker(Size, [], [], []):- Size #= 0.
+randomPuzzleMaker(Size, Puzzle, Weights, Distances):-
+    random(0, 2, R),
+    randomPuzzleMaker(R, Size, Puzzle, Weights, Distances).
+
+randomPuzzleMaker(0, Size, [weight(Distance, Weight) | Puzzle], [Weight | Weights], [Distance | Distances]):-
+    NextSize #= Size - 1,
+    randomPuzzleMaker(NextSize, Puzzle, Weights, Distances).
+randomPuzzleMaker(1, Size, [branch(Distance, Branch) | Puzzle], Weights, [Distance | Distances]):-
+    randomPuzzleMaker(Size, Branch, BranchWeights, BranchDistances),
+    append(BranchWeights, SubWeights, Weights),
+    append(BranchDistances, SubDistances, Distances),
+    length(BranchWeights, BranchSize),
+    NextSize #= Size - BranchSize,
+    randomPuzzleMaker(NextSize, Puzzle, SubWeights, SubDistances).
+
+noOverlappingDistances(Puzzle):- 
+    noOverlappingDistances(Puzzle, BranchDistances),
+    all_distinct(BranchDistances).
+
+noOverlappingDistances([], []).
+noOverlappingDistances([weight(Distance, _Weight) | Puzzle], [Distance | BranchDistances]):-
+    noOverlappingDistances(Puzzle, BranchDistances).
+
+noOverlappingDistances([branch(Distance, Weights) | Puzzle], [Distance | BranchDistances]):-
+    noOverlappingDistances(Weights, SubBranchDistances),
+    all_distinct(SubBranchDistances),
+    noOverlappingDistances(Puzzle, BranchDistances).
+
+
+makePuzzle(PuzzleSize, Puzzle, Weights):-
+    randomPuzzleMaker(PuzzleSize, Puzzle, Weights, Distances),
+    append(Weights, Distances, Vars),
+    domain(Weights, 1, PuzzleSize),
+    domain(Distances, -3, 3),
+    all_distinct(Weights),
     validPuzzle(Puzzle),
-    labeling([], Solution).
-    */
+    noOverlappingDistances(Puzzle),
+    labeling( [variable(selRandom)], Vars),
+    write(Puzzle).
+    
+selRandom(ListOfVars, Var, Rest):- random_select(Var, ListOfVars, Rest).
+
+test:-
+    puzzle8(X),
+    noOverlappingDistances(X).
 
 /* Puzzles */
 
