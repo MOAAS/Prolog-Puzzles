@@ -27,24 +27,6 @@ getPuzzleVars([branch(Distance, SubBranch) | Puzzle], Weights, [Distance | Dista
     append(BranchDistances, SubDistances, Distances),
     getPuzzleVars(Puzzle, SubWeights, SubDistances).
 
-/*
-getPuzzleSize([], 0).
-getPuzzleSize([weight(_, _) | Puzzle], Size):-
-    getPuzzleSize(Puzzle, SubSize),
-    Size #= SubSize + 1.
-getPuzzleSize([branch(_, Weights) | Puzzle], Size):-
-    getPuzzleSize(Weights, BranchSize),
-    getPuzzleSize(Puzzle, SubSize),
-    Size #= SubSize + BranchSize.
-
-unifyPuzzleVars([], Vars, Vars).
-unifyPuzzleVars([weight(_, Var) | Puzzle], [Var | Vars], NotUnified):-
-    unifyPuzzleVars(Puzzle, Vars, NotUnified).
-unifyPuzzleVars([branch(_, Weights) | Puzzle], Vars, NotUnified):-
-    unifyPuzzleVars(Weights, Vars, BranchNotUnified),
-    unifyPuzzleVars(Puzzle, BranchNotUnified, NotUnified).
-*/
-
 solvePuzzle(Puzzle, Solution):-
     getPuzzleVars(Puzzle, Solution, _Distances),
     length(Solution, PuzzleSize),
@@ -63,22 +45,6 @@ solver:-
 
 
 /* Maker */  
-
-/*
-[
-    branch(_135253033, [
-        branch(_135253409, [
-            weight(_135257127,_135256779),
-            weight(_135257233,_135256885),
-            branch(_135254581, [
-                weight(_135257339,_135256991)
-            ])
-        ])
-    ]),
-    branch(_135256329,[])
-].
-
-*/
 
 addNBranches(0, Puzzle, Puzzle).
 addNBranches(N, Puzzle, NewPuzzle):-
@@ -132,10 +98,7 @@ addWeight(1, Puzzle, [weight(_Dist, _Weight) | Puzzle]):-
 % Se calhar 1 -> escolhe um branch a sorte e poe weight nele
 addWeight(1, Puzzle, [branch(_Dist, NewBranch) | Rest]):-
     getWeightsAndBranches(Puzzle, Weights, Branches),
-  %  write('Puzzle: '), write(Puzzle), nl, 
-   % write('Weights: '), write(Weights), nl, 
-  %  write('Branches: '), write(Branches), nl, nl,
-    length(Branches, NumSubBranches), NumSubBranches > 0, % reverificar
+    length(Branches, NumSubBranches), NumSubBranches > 0, 
     random_select(branch(_D, SubBranch), Branches, OtherBranches),     
     addWeight(SubBranch, NewBranch),
     append(OtherBranches, Weights, Rest).
@@ -154,12 +117,7 @@ makeEmptyPuzzle(Size, Puzzle):-
     addNBranches(NumBranches, [], PuzzleBranches),
     fillBranch(PuzzleBranches, FilledPuzzle, NumWeights),
     RemainingWeights is Size - NumWeights,
-   % write('Puzzle before fill: '), write(PuzzleBranches), nl, nl,
-   % write('FilledPuzzle: '), write(FilledPuzzle), nl,
-   % write('NumWeightsUsed: '), write(NumWeights), nl,
-   % write('Remaining weights: '), write(RemainingWeights), nl,
     addNWeights(RemainingWeights, FilledPuzzle, Puzzle).
-  %  nl, write('Final puzzle: '), write(Puzzle), nl.
 
 noZeros([]).
 noZeros([Elem | List]):-
@@ -184,66 +142,12 @@ makePuzzle(PuzzleSize, Puzzle, Weights):-
   % labeling( [variable(selRandom)], Vars),
     % Calculate distance and solution
     labeling( [value(selRandom)], Vars).
-   % labeling( [bisect], Vars).
 
 selRandom(Var, _Rest, BB0, BB1):- % seleciona valor de forma aleatória
     fd_set(Var, Set), fdset_to_list(Set, List),
     random_member(Value, List), % da library(random)
     ( first_bound(BB0, BB1), Var #= Value ;
     later_bound(BB0, BB1), Var #\= Value ).
-
-/*
-filledPuzzle([
-    branch(_47956689, [
-        weight(_47957443,_47957445),
-        branch(_47956995, [
-            weight(_47957515,_47957517),
-            weight(_47957525,_47957527)
-        ])
-    ]),
-    branch(_47956213, [
-        weight(_47957313,_47957315),
-        branch(_47956515, [
-            weight(_47957385,_47957387),
-            weight(_47957395,_47957397)
-        ])
-    ])
-]).
-
-test:-
-    filledPuzzle(X),
-    write(X), nl, nl,
-    addNWeights(2, X, P),
-    write(P), nl.
-*/
-
-    
-
-
-
-/*
-randomPuzzleMaker(0, [], [], []).
-randomPuzzleMaker(Size, Puzzle, Weights, Distances):-
-    Size #> 0,
-    random(0, 3, R),    
-    randomPuzzleMaker(R, Size, Puzzle, Weights, Distances).
-
-randomPuzzleMaker(0, Size, [weight(Distance, Weight) | Puzzle], [Weight | Weights], [Distance | Distances]):-
-    NextSize #= Size - 1,
-    randomPuzzleMaker(NextSize, Puzzle, Weights, Distances).
-randomPuzzleMaker(2, Size, Puzzle, Weights, Distances):-
-    randomPuzzleMaker(Size, Puzzle, Weights, Distances).
-randomPuzzleMaker(1, Size, [branch(Distance, Branch) | Puzzle], Weights, [Distance | Distances]):-
-    Distance #\= 0,
-    randomPuzzleMaker(Size, Branch, BranchWeights, BranchDistances),
-    append(BranchWeights, SubWeights, Weights),
-    append(BranchDistances, SubDistances, Distances),
-    length(BranchWeights, BranchSize),
-   % write('Branch: '), write(Branch), write(' | Size = '), write(BranchSize), nl,
-    NextSize #= Size - BranchSize,
-    randomPuzzleMaker(NextSize, Puzzle, SubWeights, SubDistances).
-*/
-
 noOverlappingDistances(Puzzle):- 
     noOverlappingDistances(Puzzle, BranchDistances),
     all_distinct(BranchDistances).
@@ -256,23 +160,6 @@ noOverlappingDistances([branch(Distance, Weights) | Puzzle], [Distance | BranchD
     noOverlappingDistances(Weights, SubBranchDistances),
     all_distinct(SubBranchDistances),
     noOverlappingDistances(Puzzle, BranchDistances).
-
-/*
-
-makePuzzle(PuzzleSize, Puzzle, Weights):-
-    randomPuzzleMaker(PuzzleSize, Puzzle, Weights, Distances),
-    append(Weights, Distances, Vars),
-    domain(Weights, 1, PuzzleSize),
-    domain(Distances, -500, 500),
-    all_distinct(Weights),
-    noOverlappingDistances(Puzzle),
-  %  write(Puzzle), nl,
-    validPuzzle(Puzzle),
-  %  write(Puzzle), nl,
-   labeling( [variable(selRandom)], Vars),
-   % labeling( [], Vars),
-    write(Puzzle).
-*/
 
 testprint:-
     puzzle6s(Puzzle),
