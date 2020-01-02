@@ -278,6 +278,7 @@ testprint:-
     puzzle6s(Puzzle),
     printPuzzle(Puzzle).
 
+
 /* Puzzles */
 
 puzzleDefault([
