@@ -162,7 +162,7 @@ noOverlappingDistances([branch(Distance, Weights) | Puzzle], [Distance | BranchD
     noOverlappingDistances(Puzzle, BranchDistances).
 
 testprint:-
-    puzzle6s(Puzzle),
+    puzzle17(Puzzle),
     printPuzzle(Puzzle).
 
 
@@ -221,6 +221,42 @@ puzzle6s([
         weight(1,6)
     ]),
     weight(2,4)
+]).
+
+puzzle17([
+    weight(-3,_),
+    weight(-2,_),
+    branch(-1,[
+        branch(-1,[
+            weight(-1,_),
+            weight(1,_),
+            weight(2,_)
+        ]),
+        branch(1,[
+            branch(-1,[
+                weight(-2,_),
+                branch(1,[
+                    weight(-1,_),
+                    weight(2,_)
+                ])
+            ]),
+            weight(2,_)
+        ]),
+        weight(2,_)
+    ]),
+    branch(1,[
+        branch(-1,[
+            weight(-1,_),
+            weight(2,_)
+        ]),
+        weight(1,_),
+        branch(2,[
+            weight(-3,_),
+            weight(1,_)
+        ])
+    ]),
+    weight(2,_),
+    weight(3,_)
 ]).
 
 puzzle20([

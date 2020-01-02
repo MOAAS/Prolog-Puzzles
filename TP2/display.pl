@@ -1,12 +1,16 @@
 printPuzzle(Puzzle):-
+    getPuzzlePrintMatrix(Puzzle,Matrix),
+    %print_matrix(Matrix),
+    printPuzzleMatrix(Matrix).
+
+getPuzzlePrintMatrix(Puzzle,Matrix):-
     getpuzzleinfo(Puzzle,Min,Max,NumBranches),
     %write(Min),nl,write(Max),nl,write(NumBranches),nl,
     Height is 5 * NumBranches + 1,
     Width is Max - Min + 1,
     make_empty_matrix(Width,Height,EmptyMatrix),
     %print_matrix(EmptyMatrix),
-    insertinmatrix(EmptyMatrix,Puzzle,Min,Matrix),
-    print_matrix(Matrix).
+    insertinmatrix(EmptyMatrix,Puzzle,Min,Matrix).
 
 
 getpuzzleinfo([], _, Min, Max, NumBranches,Min, Max, NumBranches).
@@ -101,7 +105,7 @@ drawbranchelements(Matrix,Branch,PosX,Y,FMatrix):-
 drawbranchelements1st(FinalMatrix,[],_,_,FinalMatrix).
 drawbranchelements1st(Matrix,[weight(Distance, _) | Branch],PosX,Y,FMatrix):-
     X is PosX +  Distance,
-    replace_elem_at(X-Y,'|',Matrix,NewMatrix),
+    replace_elem_at(X-Y,'l',Matrix,NewMatrix),
     drawbranchelements1st(NewMatrix,Branch,PosX,Y,FMatrix).
 drawbranchelements1st(Matrix,[branch(Distance, _) | Branch],PosX,Y,FMatrix):-
     X is PosX +  Distance,
@@ -123,9 +127,6 @@ drawbranchelements2nd(Matrix,[branch(Distance, NewBranch) | Branch],PosX,Y,FMatr
     insertinmatrix(Matrix,X,Y,Y,NewBranch,NewMatrix),
     drawbranchelements2nd(NewMatrix,Branch,PosX,Y,FMatrix).
     %drawbranchelements2nd(Matrix,Branch,PosX,Y,FMatrix).
-
-
-
 
 getbranchinfo([weight(Distance, _) | Puzzle],Min,Max,FMin,FMax):-
     getbranchinfoaux(Puzzle,Distance,Max,FMin,FMax).
@@ -156,6 +157,53 @@ make_row(Width, [0 | Row]):-
     Width > 0,
     Width1 is Width - 1,
     make_row(Width1,Row).  
+
+
+printPuzzleMatrix([]).
+printPuzzleMatrix([Row|Matrix]):-
+    printPuzzleRow(Row),
+    printPuzzleMatrix(Matrix).
+
+printPuzzleRow([]):-nl.
+printPuzzleRow([0|Matrix]):-
+    write('     '),
+    printPuzzleRow(Matrix).
+
+printPuzzleRow(['-'|Matrix]):-
+    write('  |'),
+    printPuzzleRowLine(Matrix).
+
+printPuzzleRowLine(['-'|Matrix]):-
+    write('----|'),
+    printPuzzleRowLine(Matrix).
+printPuzzleRowLine(Matrix):-
+    write('  '),
+    printPuzzleRow(Matrix).
+
+printPuzzleRow(['|'|Matrix]):-
+    write('  |  '),
+    printPuzzleRow(Matrix).
+printPuzzleRow(['['|Matrix]):-
+    write('  ^  '),
+    printPuzzleRow(Matrix).
+printPuzzleRow([']'|Matrix]):-
+    write('  v  '),
+    printPuzzleRow(Matrix).
+printPuzzleRow(['l'|Matrix]):-
+    write(' _|_ '),
+    printPuzzleRow(Matrix).
+printPuzzleRow(['?'|Matrix]):-
+    write('| ? |'),
+    printPuzzleRow(Matrix).
+printPuzzleRow([Elem|Matrix]):-
+    write('| '),displayNum(Elem),write('|'),
+    printPuzzleRow(Matrix).
+
+
+displayNum(V):- %if the number has 2 digits doesnt print the space so it can fit
+    V > 9 , write(V).
+displayNum(V):-
+    write(V),write(' ').
 
 
 /** Utility functions **/
