@@ -188,6 +188,14 @@ printPuzzleMatrix([Row|Matrix]):-
     printPuzzleRow(Row),
     printPuzzleMatrix(Matrix).
 
+printPuzzleRowLine(['-'|Matrix]):-
+    write('----|'),
+    printPuzzleRowLine(Matrix).
+printPuzzleRowLine(Matrix):-
+    write('  '),
+    printPuzzleRow(Matrix).
+
+
 printPuzzleRow([]):-nl.
 printPuzzleRow([0|Matrix]):-
     write('     '),
@@ -196,14 +204,6 @@ printPuzzleRow([0|Matrix]):-
 printPuzzleRow(['-'|Matrix]):-
     write('  |'),
     printPuzzleRowLine(Matrix).
-
-printPuzzleRowLine(['-'|Matrix]):-
-    write('----|'),
-    printPuzzleRowLine(Matrix).
-printPuzzleRowLine(Matrix):-
-    write('  '),
-    printPuzzleRow(Matrix).
-
 printPuzzleRow(['|'|Matrix]):-
     write('  |  '),
     printPuzzleRow(Matrix).
