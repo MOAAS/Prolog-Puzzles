@@ -1,7 +1,7 @@
 printPuzzle(Puzzle):-
     getPuzzlePrintMatrix(Puzzle,Matrix),
     %print_matrix(Matrix),
-    printPuzzleMatrix(Matrix).
+    printPuzzleMatrix(Matrix), !.
 
 getPuzzlePrintMatrix(Puzzle,Matrix):-
     getpuzzleinfo(Puzzle,Min,Max,NumBranches),

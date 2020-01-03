@@ -3,6 +3,76 @@
 :- use_module(library(random)).
 :- use_module(library(lists)).
 :-consult('display.pl').
+:-consult('statistics.pl').
+:-consult('puzzles.pl').
+
+/* Menu */
+
+menu:-
+    repeat,
+        write('+---------------+'), nl,
+        write('| Weight solver |'), nl,
+        write('+---------------+'), nl,
+        write('1 - Solve Puzzle 1 (Size: 5)'), nl,
+        write('2 - Solve Puzzle 2 (Size: 6)'), nl,
+        write('3 - Solve Puzzle 3 (Size: 8)'), nl,
+        write('4 - Solve Puzzle 4 (Size: 17)'), nl,
+        write('5 - Solve Puzzle 5 (Size: 20)'), nl,
+        write('-X - Solve Random Puzzle (Size: X, max: 20)'), nl,
+        write('0 - Quit'), nl,
+        read_option(Option),
+        choose_option(Option),
+    Option = 0, !.
+
+choose_option(0).
+choose_option(Option):-
+    Option > 0,
+    get_option_puzzle(Option, Puzzle),
+    solvePuzzle(Puzzle),
+    hidePuzzleSolution(Puzzle, HiddenPuzzle),
+    printPuzzleAndSolution(HiddenPuzzle, Puzzle).
+
+choose_option(Option):-
+    Option < 0,
+    PuzzleSize is abs(Option),
+    makePuzzle(PuzzleSize, SolvedPuzzle), 
+    hidePuzzleSolution(SolvedPuzzle, HiddenPuzzle),
+    printPuzzleAndSolution(HiddenPuzzle, SolvedPuzzle).
+
+% Translates each option into respective puzzle
+get_option_puzzle(0, _).
+get_option_puzzle(1, Puzzle):- puzzleDefault(Puzzle).
+get_option_puzzle(2, Puzzle):- puzzle6(Puzzle).
+get_option_puzzle(3, Puzzle):- puzzle8(Puzzle).
+get_option_puzzle(4, Puzzle):- puzzle17(Puzzle).
+get_option_puzzle(5, Puzzle):- puzzle20(Puzzle).
+
+% Prints unsolved, then solved version
+printPuzzleAndSolution(Puzzle, Solution):-
+    nl, print('--- Unsolved puzzle ---'), nl, nl,
+    printPuzzle(Puzzle),
+    print(':| Press enter to show solution '), get_code(X), get_code(X),
+    nl, print('--- Solution ---'), nl, nl,
+    printPuzzle(Solution).
+
+
+
+
+% Read an option from standard input
+read_option(Input):-
+    repeat,
+        write('Option: '),
+        catch(read(Input), _Error, bad_input_format),
+        validate_choice(Input),
+    !.
+
+% Validate the menu option input 
+validate_choice(Input):- integer(Input), Input >= -40, Input =< 5.
+validate_choice(_):- bad_input_format.
+
+% Printing error message for read_option
+bad_input_format:- write('Invalid option.'), nl, fail.
+
 
 /* Solver */
 
@@ -45,22 +115,33 @@ getPuzzleVars([branch(Distance, SubBranch) | Puzzle], Weights, [Distance | Dista
 /* solvePuzzle(+Puzzle, -Solution)
 Solves a Weight puzzle. Solution will be a list containing the puzzle weight values (DFS order)
 */
-solvePuzzle(Puzzle, Solution):-
+solvePuzzle(Puzzle):-
     getPuzzleVars(Puzzle, Solution, _Distances),
     length(Solution, PuzzleSize),
     domain(Solution, 1, PuzzleSize),
     all_distinct(Solution),
     validPuzzle(Puzzle),
-    labeling([], Solution).
+    reset_timer,
+    labeling([ffc, time_out(5000, Flag)], Solution),
+    checkTimeOutFlag(Flag),
+    print_time,
+	fd_statistics.
+
+checkTimeOutFlag(success).
+checkTimeOutFlag(time_out):- write('Puzzle solving timed out.'), nl, fail.
+
 
 % testestest
 solver:-
     puzzle8(Puzzle8),
+    puzzle17(Puzzle17),
     puzzle20(Puzzle20),
-    solvePuzzle(Puzzle8, Solution8),
-    solvePuzzle(Puzzle20, Solution20),
-    write('Puzzle 8 solution: '), write(Solution8), nl,
-    write('Puzzle 20 solution: '), write(Solution20), nl.
+    solvePuzzle(Puzzle8),
+    solvePuzzle(Puzzle17),
+    solvePuzzle(Puzzle20),
+    write('Puzzle 8 solution: '), write(Puzzle8), nl,
+    write('Puzzle 17 solution: '), write(Puzzle17), nl,
+    write('Puzzle 20 solution: '), write(Puzzle20), nl.
 
 
 
@@ -209,23 +290,28 @@ noZeros([Elem | List]):-
 Makes and solves a random weight puzzle of size PuzzleSize. Puzzle is unified with result.
 */
 makePuzzle(PuzzleSize, Puzzle):- 
-    % Make random puzzle
-    makeEmptyPuzzle(PuzzleSize, Puzzle),
-    getPuzzleVars(Puzzle, Weights, Distances),
-    append(Weights, Distances, Vars),
-    % Establish domain
-    DistanceMax is min(5, max(3, div(PuzzleSize, 2))),
-    DistanceMin is 0 - DistanceMax,
-    domain(Weights, 1, PuzzleSize),
-    domain(Distances, DistanceMin, DistanceMax),
-    % Enforce restrictions
-    all_distinct(Weights),
-    noZeros(Distances),
-    noOverlappingDistances(Puzzle),
-    validPuzzle(Puzzle),
-    % Calculate distance and solution
-   % labeling( [bisect], Vars).
-    labeling( [value(selRandom)], Vars).
+    reset_timer,
+    repeat,
+        % Make random puzzle
+        makeEmptyPuzzle(PuzzleSize, Puzzle),
+        getPuzzleVars(Puzzle, Weights, Distances),
+        append(Weights, Distances, Vars),
+        % Establish domain
+        DistanceMax is min(5, max(3, div(PuzzleSize, 2))),
+        DistanceMin is 0 - DistanceMax,
+        domain(Weights, 1, PuzzleSize),
+        domain(Distances, DistanceMin, DistanceMax),
+        % Enforce restrictions
+        all_distinct(Weights),
+        noZeros(Distances),
+        noOverlappingDistances(Puzzle),
+        validPuzzle(Puzzle),
+        % Calculate distance and solution
+        % labeling( [bisect], Vars).
+        labeling( [value(selRandom), time_out(1000, success)], Vars),
+    !,
+    print_time,
+    fd_statistics.
 
 selRandom(Var, _Rest, BB0, BB1):- % seleciona valor de forma aleatória
     fd_set(Var, Set), fdset_to_list(Set, List),
@@ -233,182 +319,13 @@ selRandom(Var, _Rest, BB0, BB1):- % seleciona valor de forma aleatória
     ( first_bound(BB0, BB1), Var #= Value ;
     later_bound(BB0, BB1), Var #\= Value ).
 
-%testestes
-testprint:-
-    makePuzzle(15,Puzzle,_),
-    write(Puzzle),nl,
-    printPuzzle(Puzzle).
+/* hidePuzzleSolution(+Puzzle, -NewPuzzle)
 
-
-/* Puzzles */
-
-puzzleDefault([
-    weight(-3, _),
-    weight(-1, _),
-    branch(2, [
-        weight(-2, _),
-        weight(-1, _),
-        weight(1, _)
-    ])
-]).
-
-puzzle8([
-    branch(-1, [
-        branch(-1, [
-            weight(-2, _),
-            weight(-1, _),
-            weight(1, _)
-        ]),
-        weight(2, _)
-    ]),
-    branch(1, [
-        weight(-3, _),
-        weight(-2, _),
-        weight(-1, _),
-        weight(2, _)
-    ])
-]).
-
-
-
-puzzle6([
-    weight(-3,_),
-    weight(-2,_),
-    branch(1,[
-        branch(-1,[
-            weight(-3,_),
-            weight(1,_)
-        ]),
-        weight(1,_)
-    ]),
-    weight(2,_)
-]).
-
-puzzle6s([
-    weight(-3,3),
-    weight(-2,1),
-    branch(1,[
-        branch(-1,[
-            weight(-3,5),
-            weight(1,2)
-        ]),
-        weight(1,6)
-    ]),
-    weight(2,4)
-]).
-
-puzzle17([
-    weight(-3,_),
-    weight(-2,_),
-    branch(-1,[
-        branch(-1,[
-            weight(-1,_),
-            weight(1,_),
-            weight(2,_)
-        ]),
-        branch(1,[
-            branch(-1,[
-                weight(-2,_),
-                branch(1,[
-                    weight(-1,_),
-                    weight(2,_)
-                ])
-            ]),
-            weight(2,_)
-        ]),
-        weight(2,_)
-    ]),
-    branch(1,[
-        branch(-1,[
-            weight(-1,_),
-            weight(2,_)
-        ]),
-        weight(1,_),
-        branch(2,[
-            weight(-3,_),
-            weight(1,_)
-        ])
-    ]),
-    weight(2,_),
-    weight(3,_)
-]).
-
-puzzle20([
-    branch(-4, [
-        weight(-3,_),
-        weight(-2,_),
-        weight(3,_)
-    ]),
-    branch(-2, [
-        weight(-2,_),
-        weight(-1,_),
-        branch(1, [
-            branch(-1, [
-                weight(-1,_),
-                weight(2,_),
-                weight(3,_)
-            ]),
-            weight(1,_),
-            weight(2,_)
-        ])
-    ]),
-    weight(1,_),
-    branch(3, [
-        branch(-1, [
-            branch(-1, [
-                weight(-1,_),
-                branch(1, [
-                    weight(-2,_),
-                    weight(1,6)
-                ]),
-                weight(2,_),
-                weight(3,_)
-            ]),
-            weight(1,_),
-            weight(2,_)
-        ]),
-        weight(1,_),
-        weight(2,_)
-    ])
-]).
-
-puzzledomoas([
-    weight(-1,8),
-    branch(1,[
-        branch(3,[
-            weight(-4,1),
-            weight(2,2),
-            weight(-2,6),
-            weight(4,3)
-            ]),
-        weight(-2,4),
-        weight(-4,7)
-        ]),
-    weight(-3,5)
-]).
-
-puzzleb([
-    branch(-3,[
-        weight(-1,2),
-        weight(-4,1),
-        weight(1,6)
-    ]),
-    branch(1,[
-        weight(3,3),
-        weight(-2,7),
-        weight(1,5)
-    ]),
-    weight(2,8),
-    weight(-1,4)
-]).
-
-puzzlec([
-    branch(3,[
-        weight(4,1),
-        weight(-4,5)
-    ]),
-     branch(-4,[
-        weight(-1,1),
-        weight(2,5)
-    ])
-]).
+Replaces Puzzle's weights with non-unified variables.
+*/
+hidePuzzleSolution([], []).
+hidePuzzleSolution([weight(Distance, _) | Puzzle], [weight(Distance, _) | NewPuzzle]):-
+    hidePuzzleSolution(Puzzle, NewPuzzle).
+hidePuzzleSolution([branch(Distance, SubBranch) | Puzzle], [branch(Distance, NewSubBranch) | NewPuzzle]):-
+    hidePuzzleSolution(SubBranch, NewSubBranch),
+    hidePuzzleSolution(Puzzle, NewPuzzle).
