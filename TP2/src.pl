@@ -233,35 +233,6 @@ selRandom(Var, _Rest, BB0, BB1):- % seleciona valor de forma aleatória
     ( first_bound(BB0, BB1), Var #= Value ;
     later_bound(BB0, BB1), Var #\= Value ).
 
-/* puzzleOrder(+Field1, +Field2)
-
-Binary Order predicate. Field1 and Field2 must be either weight(D, _) or branch(D, _)
-Returns True if Field1 has a smaller distance than Field2, false otherwise.
-*/
-puzzleOrder(Field1, Field2):-
-    Field1 =.. [_, D1, _],
-    Field2 =.. [_, D2, _],
-    D1 < D2.
-
-/* orderPuzzle(+Puzzle, -OrderedPuzzle)
-
-Orders Puzzle, and unifies result with OrderedPuzzle. 
-Puzzle is ordered if left most elements have lower distances than the elements to their right.
-*/
-orderPuzzle(Puzzle, OrderedPuzzle):- 
-    orderSubBranches(Puzzle, OrderedSubBranches),
-    samsort(puzzleOrder, OrderedSubBranches, OrderedPuzzle).
-
-/* orderSubBranches(+Puzzle, -OrderedPuzzle)
-
-Same as orderPuzzle, but orders only the puzzle's subbranches, ignoring the root level.
-*/
-orderSubBranches([], []).
-orderSubBranches([weight(_D, _W) | Puzzle], [weight(_D, _W) | Ordered]):- orderSubBranches(Puzzle, Ordered).
-orderSubBranches([branch(_D, SubBranch) | Puzzle], [branch(_D, OrderedSubBranch) | Ordered]):- 
-    orderPuzzle(SubBranch, OrderedSubBranch),
-    orderSubBranches(Puzzle, Ordered).
-
 %testestes
 testprint:-
     makePuzzle(20, Puzzle, _),
@@ -269,12 +240,6 @@ testprint:-
     orderPuzzle(Puzzle, OrderedPuzzle),
     write(OrderedPuzzle), nl, nl,
     printPuzzle(OrderedPuzzle).
-
-%testestes
-testorder:-
-    puzzleDefault(X),
-    orderPuzzle(X, Y),
-    write(Y).
 
 /* Puzzles */
 
