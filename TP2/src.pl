@@ -18,7 +18,7 @@ menu:-
         write('3 - Solve Puzzle 3 (Size: 8)'), nl,
         write('4 - Solve Puzzle 4 (Size: 17)'), nl,
         write('5 - Solve Puzzle 5 (Size: 20)'), nl,
-        write('-X - Solve Random Puzzle (Size: X, max: 20)'), nl,
+        write('-X - Solve Random Puzzle (Size: X, range: 1-20)'), nl,
         write('0 - Quit'), nl,
         read_option(Option),
         choose_option(Option),
@@ -33,7 +33,7 @@ choose_option(Option):-
     printPuzzleAndSolution(HiddenPuzzle, Puzzle).
 
 choose_option(Option):-
-    Option < 0,
+    Option < -1,
     PuzzleSize is abs(Option),
     makePuzzle(PuzzleSize, SolvedPuzzle), 
     hidePuzzleSolution(SolvedPuzzle, HiddenPuzzle),
@@ -67,7 +67,7 @@ read_option(Input):-
     !.
 
 % Validate the menu option input 
-validate_choice(Input):- integer(Input), Input >= -40, Input =< 5.
+validate_choice(Input):- integer(Input), Input >= -40, Input =< 5, Input \= -1.
 validate_choice(_):- bad_input_format.
 
 % Printing error message for read_option
@@ -290,6 +290,7 @@ noZeros([Elem | List]):-
 Makes and solves a random weight puzzle of size PuzzleSize. Puzzle is unified with result.
 */
 makePuzzle(PuzzleSize, Puzzle):- 
+    PuzzleSize > 1,
     reset_timer,
     repeat,
         % Make random puzzle
