@@ -32,8 +32,8 @@ getpuzzleinfo(Puzzle,Min,Max,NumBranches):-
 
 insertinmatrix(Matrix,PosX,Origin,Dest,Branch,FMatrix):-
     getbranchinfo(Branch,Min,Max),
-    %nl,write(Min),nl,write(Max),nl,
     X is PosX + Min,
+    %nl,write(Min),nl,write(Max),nl,
     Size is Max - Min + 1, 
     Y1 is Dest + 1,
     checkiffits(Matrix,X,Y1,Size),
@@ -164,6 +164,14 @@ printPuzzleMatrix([Row|Matrix]):-
     printPuzzleRow(Row),
     printPuzzleMatrix(Matrix).
 
+printPuzzleRowLine(['-'|Matrix]):-
+    write('----|'),
+    printPuzzleRowLine(Matrix).
+printPuzzleRowLine(Matrix):-
+    write('  '),
+    printPuzzleRow(Matrix).
+
+
 printPuzzleRow([]):-nl.
 printPuzzleRow([0|Matrix]):-
     write('     '),
@@ -172,14 +180,6 @@ printPuzzleRow([0|Matrix]):-
 printPuzzleRow(['-'|Matrix]):-
     write('  |'),
     printPuzzleRowLine(Matrix).
-
-printPuzzleRowLine(['-'|Matrix]):-
-    write('----|'),
-    printPuzzleRowLine(Matrix).
-printPuzzleRowLine(Matrix):-
-    write('  '),
-    printPuzzleRow(Matrix).
-
 printPuzzleRow(['|'|Matrix]):-
     write('  |  '),
     printPuzzleRow(Matrix).
