@@ -5,12 +5,13 @@ printPuzzle(Puzzle):-
 
 getPuzzlePrintMatrix(Puzzle,Matrix):-
     getpuzzleinfo(Puzzle,Min,Max,NumBranches),
-    %write(Min),nl,write(Max),nl,write(NumBranches),nl,
-    Height is 5 * NumBranches + 1,
-    Width is Max - Min + 1,
+    %$write(Min),nl,write(Max),nl,write(NumBranches),nl,
+    Height is 7 * NumBranches + 1,
+    Width is Max - Min + 1 ,
     make_empty_matrix(Width,Height,EmptyMatrix),
     %print_matrix(EmptyMatrix),
     insertinmatrix(EmptyMatrix,Puzzle,Min,Matrix).
+    %print_matrix(Matrix).
 
 
 getpuzzleinfo([], _, Min, Max, NumBranches,Min, Max, NumBranches).
@@ -27,13 +28,13 @@ getpuzzleinfo([branch(Distance, Weights) | Puzzle], RelPos, Min, Max, NumBranche
     getpuzzleinfo(Puzzle, RelPos, NewMin, NewMax, NewerNumBranches, FMin, FMax, FNumBranches).
 
 getpuzzleinfo(Puzzle,Min,Max,NumBranches):-
-    getpuzzleinfo(Puzzle,0,0,0,1,Min,Max,NumBranches).
+    getpuzzleinfo(Puzzle,0,99,-99,1,Min,Max,NumBranches).
 
 
 insertinmatrix(Matrix,PosX,Origin,Dest,Branch,FMatrix):-
     getbranchinfo(Branch,Min,Max),
-    %nl,write(Min),nl,write(Max),nl,
     X is PosX + Min,
+    %write(Max),write(' '),write(Min),nl, write(PosX), nl,
     Size is Max - Min + 1, 
     Y1 is Dest + 1,
     checkiffits(Matrix,X,Y1,Size),
@@ -52,14 +53,16 @@ insertinmatrix(EmptyMatrix,Puzzle,Min,FinalMatrix):-
     insertinmatrix(EmptyMatrix,Zero,0,0,Puzzle,FinalMatrix).
 
 checkiffits(Matrix,X,Y,Size):-
-    nl,
     X1 is X-1,Y1 is Y-1,
     XN is max(X1,0),YN is max(Y1,0),
-    checkiffits(Matrix,XN,YN,Size,4),
-    nl.
+    NSize is Size+2,
+    checkiffits(Matrix,XN,YN,NSize,4).
 
 checkiffits(_,_,_,_,0).
 checkiffits(Matrix,X,Y,Size,Loops):-
+    %write('AQUIIII'),
+    %write(X),write(' '),write(Y),nl,
+    %write(Size),nl,
     checkrow(Matrix,X,Y,Size),
     NLoops is Loops - 1,
     Y1 is Y+1,
@@ -67,10 +70,15 @@ checkiffits(Matrix,X,Y,Size,Loops):-
 
 checkrow(_,_,_,-1).
 checkrow(Matrix,X,Y,Size):-
+    Size >= 0,
+    %write(X),write(' '),write(Y),write(' '),write(Size),nl,
     get_elem_at(X-Y,Matrix,A),
-    !,A == 0,
-   % write(A),
+    %write('OLA'),
+    %nl,write(A),nl,
+    %write('AQUIIIIaa'),
+    !,A = 0,
     NX is X+1,NSize is Size-1,
+    %write(NSize),
     checkrow(Matrix,NX,Y,NSize).
 
 
@@ -128,11 +136,13 @@ drawbranchelements2nd(Matrix,[branch(Distance, NewBranch) | Branch],PosX,Y,FMatr
     drawbranchelements2nd(NewMatrix,Branch,PosX,Y,FMatrix).
     %drawbranchelements2nd(Matrix,Branch,PosX,Y,FMatrix).
 
-getbranchinfo([weight(Distance, _) | Puzzle],Min,Max,FMin,FMax):-
-    getbranchinfoaux(Puzzle,Distance,Max,FMin,FMax).
+/*
+getbranchinfo(« Puzzle],Min,Max,FMin,FMax):-
+    getbranchinfoaux(Puzzle,99,-99,FMin,FMax),
+    nl.
 getbranchinfo([branch(Distance, _) | Puzzle],Min,Max,FMin,FMax):-
-    getbranchinfoaux(Puzzle,Distance,Max,FMin,FMax).
-
+    getbranchinfoaux(Puzzle,99,-99,FMin,FMax),
+    nl.
 getbranchinfoaux([weight(Distance, _) | Puzzle],Min,_Max,FMin,FMax):-
     getbranchinfoaux(Puzzle,Min,Distance,FMin,FMax).
 getbranchinfoaux([branch(Distance, _) | Puzzle],Min,_Max,FMin,FMax):-
@@ -140,7 +150,21 @@ getbranchinfoaux([branch(Distance, _) | Puzzle],Min,_Max,FMin,FMax):-
 getbranchinfoaux([],Min,Max,Min,Max).
 
 getbranchinfo(Puzzle,Min,Max):-
-    getbranchinfo(Puzzle,0,0,Min,Max).
+    getbranchinfo(Puzzle,0,0,Min,Max).*/
+
+getbranchinfo(Puzzle,Min,Max):-
+    getbranchinfo(Puzzle,99,-99,Min,Max).
+
+getbranchinfo([],Min, Max, Min,Max).
+getbranchinfo([weight(Distance, _) | Puzzle],Min, Max, FMin, FMax):-
+    NewMin is min(Distance,Min),
+    NewMax is max(Distance,Max),
+    getbranchinfo(Puzzle, NewMin, NewMax, FMin, FMax).
+getbranchinfo([branch(Distance, _) | Puzzle],Min, Max, FMin, FMax):-
+    NewMin is min(Distance,Min),
+    NewMax is max(Distance,Max),
+    getbranchinfo(Puzzle, NewMin, NewMax, FMin, FMax).
+
 
 print_matrix([]).
 print_matrix([H|T]) :- write(H), nl, print_matrix(T).

@@ -162,7 +162,8 @@ noOverlappingDistances([branch(Distance, Weights) | Puzzle], [Distance | BranchD
     noOverlappingDistances(Puzzle, BranchDistances).
 
 testprint:-
-    puzzle17(Puzzle),
+    makePuzzle(15,Puzzle,_),
+    write(Puzzle),nl,
     printPuzzle(Puzzle).
 
 
@@ -298,3 +299,43 @@ puzzle20([
     ])
 ]).
 
+puzzledomoas([
+    weight(-1,8),
+    branch(1,[
+        branch(3,[
+            weight(-4,1),
+            weight(2,2),
+            weight(-2,6),
+            weight(4,3)
+            ]),
+        weight(-2,4),
+        weight(-4,7)
+        ]),
+    weight(-3,5)
+]).
+
+puzzleb([
+    branch(-3,[
+        weight(-1,2),
+        weight(-4,1),
+        weight(1,6)
+    ]),
+    branch(1,[
+        weight(3,3),
+        weight(-2,7),
+        weight(1,5)
+    ]),
+    weight(2,8),
+    weight(-1,4)
+]).
+
+puzzlec([
+    branch(3,[
+        weight(4,1),
+        weight(-4,5)
+    ]),
+     branch(-4,[
+        weight(-1,1),
+        weight(2,5)
+    ])
+]).
