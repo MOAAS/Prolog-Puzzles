@@ -1,19 +1,26 @@
+/* printPuzzle(+Puzzle)
+   Prints the puzzle
+*/
 printPuzzle(Puzzle):-
     getPuzzlePrintMatrix(Puzzle,Matrix),
-    %print_matrix(Matrix),
     printPuzzleMatrix(Matrix), !.
 
+/* getPuzzlePrintMatrix(+Puzzle,-Matrix)
+   Gets the puzzle print matrix, the print matrix is used to make
+   a structure to how to print the tree. Elements are put in the print matrix
+   so then they can be printed line by line
+*/
 getPuzzlePrintMatrix(Puzzle,Matrix):-
     getpuzzleinfo(Puzzle,Min,Max,NumBranches),
-    %$write(Min),nl,write(Max),nl,write(NumBranches),nl,
     Height is 7 * NumBranches + 1,
     Width is Max - Min + 1 ,
     make_empty_matrix(Width,Height,EmptyMatrix),
-    %print_matrix(EmptyMatrix),
-    insertinmatrix(EmptyMatrix,Puzzle,Min,Matrix).
-    %print_matrix(Matrix).
+    insertbranchinmatrix(EmptyMatrix,Puzzle,Min,Matrix).
 
 
+/* getpuzzleinfo(+Puzzle,-Min,-Max,-NumBranches)
+   Gets the puzzle info: Minimum and maximum coords and num of branches
+*/
 getpuzzleinfo([], _, Min, Max, NumBranches,Min, Max, NumBranches).
 getpuzzleinfo([weight(Distance, _) | Puzzle],  RelPos, Min, Max, NumBranches,FMin, FMax, FNumBranches):-
     Pos is Distance + RelPos,
@@ -30,28 +37,33 @@ getpuzzleinfo([branch(Distance, Weights) | Puzzle], RelPos, Min, Max, NumBranche
 getpuzzleinfo(Puzzle,Min,Max,NumBranches):-
     getpuzzleinfo(Puzzle,0,99,-99,1,Min,Max,NumBranches).
 
-
-insertinmatrix(Matrix,PosX,Origin,Dest,Branch,FMatrix):-
+/* insertbranchinmatrix(+Matrix,+PosX,+Origin,+Dest,+Branch,-FMatrix)
+   Inserts a branch into the matrix.Its the main function and is called
+   for every branch.
+*/
+insertbranchinmatrix(Matrix,PosX,Origin,Dest,Branch,FMatrix):-
     getbranchinfo(Branch,Min,Max),
     X is PosX + Min,
-    %write(Max),write(' '),write(Min),nl, write(PosX), nl,
     Size is Max - Min + 1, 
     Y1 is Dest + 1,
     checkiffits(Matrix,X,Y1,Size),
-    drawstring(Matrix,Origin,Dest,PosX,NewMatrix1), %print_matrix(NewMatrix1),nl,
-    drawhorizontal(NewMatrix1,X,Y1,Size,NewMatrix2),%print_matrix(NewMatrix2),nl,
+    drawsverticalstring(Matrix,Origin,Dest,PosX,NewMatrix1),
+    drawhorizontal(NewMatrix1,X,Y1,Size,NewMatrix2),
     Y2 is Dest + 2, 
-    drawbranchelements(NewMatrix2,Branch,PosX,Y2,FMatrix). %print_matrix(FMatrix),nl.
+    drawbranchelements(NewMatrix2,Branch,PosX,Y2,FMatrix).
 
-insertinmatrix(Matrix,PosX,Origin,Dest,Branch,FMatrix):-
-    %write('ola'),
-    NewDest is Dest+3,
-    insertinmatrix(Matrix,PosX,Origin,NewDest,Branch,FMatrix).
+insertbranchinmatrix(Matrix,PosX,Origin,Dest,Branch,FMatrix):-
+    NewDest is Dest + 3,
+    insertbranchinmatrix(Matrix,PosX,Origin,NewDest,Branch,FMatrix).
 
-insertinmatrix(EmptyMatrix,Puzzle,Min,FinalMatrix):-
+insertbranchinmatrix(EmptyMatrix,Puzzle,Min,FinalMatrix):-
     Zero is -Min,
-    insertinmatrix(EmptyMatrix,Zero,0,0,Puzzle,FinalMatrix).
+    insertbranchinmatrix(EmptyMatrix,Zero,0,0,Puzzle,FinalMatrix).
 
+/* checkiffits(+Matrix,+X,+Y,+Size)
+   Check if a branch with certain dimensions doesnt colide with 
+   previus inserted elements.
+*/
 checkiffits(Matrix,X,Y,Size):-
     X1 is X-1,Y1 is Y-1,
     XN is max(X1,0),YN is max(Y1,0),
@@ -60,9 +72,6 @@ checkiffits(Matrix,X,Y,Size):-
 
 checkiffits(_,_,_,_,0).
 checkiffits(Matrix,X,Y,Size,Loops):-
-    %write('AQUIIII'),
-    %write(X),write(' '),write(Y),nl,
-    %write(Size),nl,
     checkrow(Matrix,X,Y,Size),
     NLoops is Loops - 1,
     Y1 is Y+1,
@@ -71,33 +80,45 @@ checkiffits(Matrix,X,Y,Size,Loops):-
 checkrow(_,_,_,-1).
 checkrow(Matrix,X,Y,Size):-
     Size >= 0,
-    %write(X),write(' '),write(Y),write(' '),write(Size),nl,
     get_elem_at(X-Y,Matrix,A),
-    %write('OLA'),
-    %nl,write(A),nl,
-    %write('AQUIIIIaa'),
     !,A = 0,
     NX is X+1,NSize is Size-1,
-    %write(NSize),
     checkrow(Matrix,NX,Y,NSize).
 
+/* drawsverticalstring(+Matrix,+Current,+Dest,+PosX,-FinalMatrix)
+   Draws a vertical line in the matrix from Current to Dest. Withou coliding
+   with previus inserted elements
+*/
+drawsverticalstring(FinalMatrix,Current,Dest,_PosX,FinalMatrix):- Current > Dest.
 
-drawstring(FinalMatrix,Current,Dest,_PosX,FinalMatrix):- Current > Dest.
-
-drawstring(Matrix,Current,Dest,PosX,FinalMatrix):-
+drawsverticalstring(Matrix,Current,Dest,PosX,FinalMatrix):-
     get_elem_at(PosX-Current,Matrix,A),
     A =='-',
     C1 is Current - 1,
     replace_elem_at(PosX-C1,'[',Matrix,NewMatrix),
-    C2 is Current + 3,
-    replace_elem_at(PosX-C2,']',NewMatrix,NewMatrix2),
-    New is C2+1,
-    drawstring(NewMatrix2,New,Dest,PosX,FinalMatrix).
-drawstring(Matrix,Current,Dest,PosX,FinalMatrix):- 
+    C2 is Current + 4,
+    drawstringcolision(NewMatrix,C2,Dest,PosX,FinalMatrix).
+
+drawsverticalstring(Matrix,Current,Dest,PosX,FinalMatrix):- 
     replace_elem_at(PosX-Current,'|',Matrix,NewMatrix),
     New is Current +1,
-    drawstring(NewMatrix,New,Dest,PosX,FinalMatrix).
+    drawsverticalstring(NewMatrix,New,Dest,PosX,FinalMatrix).
 
+drawstringcolision(Matrix,Current,Dest,PosX,FinalMatrix):-
+    get_elem_at(PosX-Current,Matrix,A),
+    A \= 0,
+    C1 is Current + 4,
+    drawstringcolision(Matrix,C1,Dest,PosX,FinalMatrix).
+
+drawstringcolision(Matrix,Current,Dest,PosX,FinalMatrix):-
+    replace_elem_at(PosX-Current,']',Matrix,NewMatrix),
+    C1 is Current+1,
+    drawsverticalstring(NewMatrix,C1,Dest,PosX,FinalMatrix).
+
+
+/* drawhorizontal(+Matrix,+X,+Y,+Size,-FinalMatrix)
+   Draws a horizontal line in the matrix from X-Y position with size Size
+*/
 drawhorizontal(FinalMatrix,_,_,0,FinalMatrix).
 drawhorizontal(Matrix,X,Y,Size,FinalMatrix):-
     NSize is Size-1,
@@ -105,6 +126,11 @@ drawhorizontal(Matrix,X,Y,Size,FinalMatrix):-
     Xn is X + 1,
     drawhorizontal(NewMatrix,Xn,Y,NSize,FinalMatrix).
 
+
+/* drawbranchelements(+Matrix,+Branch,+PosX,+Y,-FMatrix)
+   Draws the elements from a branch. If the elemet is a branch
+   it will call insertbranchinmatrix.
+*/
 drawbranchelements(Matrix,Branch,PosX,Y,FMatrix):-
     drawbranchelements1st(Matrix,Branch,PosX,Y,NewMatrix),
     Y1 is Y + 1,
@@ -126,32 +152,19 @@ drawbranchelements2nd(Matrix,[weight(Distance, Weight) | Branch],PosX,Y,FMatrix)
     X is PosX +  Distance,
     replace_elem_at(X-Y,Weight,Matrix,NewMatrix),
     drawbranchelements2nd(NewMatrix,Branch,PosX,Y,FMatrix).
-drawbranchelements2nd(Matrix,[weight(Distance, Weight) | Branch],PosX,Y,FMatrix):-
+drawbranchelements2nd(Matrix,[weight(Distance, _Weight) | Branch],PosX,Y,FMatrix):-
     X is PosX +  Distance,
     replace_elem_at(X-Y,'?',Matrix,NewMatrix),
     drawbranchelements2nd(NewMatrix,Branch,PosX,Y,FMatrix).
 drawbranchelements2nd(Matrix,[branch(Distance, NewBranch) | Branch],PosX,Y,FMatrix):-
     X is PosX +  Distance,
-    insertinmatrix(Matrix,X,Y,Y,NewBranch,NewMatrix),
+    insertbranchinmatrix(Matrix,X,Y,Y+1,NewBranch,NewMatrix),
     drawbranchelements2nd(NewMatrix,Branch,PosX,Y,FMatrix).
-    %drawbranchelements2nd(Matrix,Branch,PosX,Y,FMatrix).
 
-/*
-getbranchinfo(« Puzzle],Min,Max,FMin,FMax):-
-    getbranchinfoaux(Puzzle,99,-99,FMin,FMax),
-    nl.
-getbranchinfo([branch(Distance, _) | Puzzle],Min,Max,FMin,FMax):-
-    getbranchinfoaux(Puzzle,99,-99,FMin,FMax),
-    nl.
-getbranchinfoaux([weight(Distance, _) | Puzzle],Min,_Max,FMin,FMax):-
-    getbranchinfoaux(Puzzle,Min,Distance,FMin,FMax).
-getbranchinfoaux([branch(Distance, _) | Puzzle],Min,_Max,FMin,FMax):-
-    getbranchinfoaux(Puzzle,Min,Distance,FMin,FMax).
-getbranchinfoaux([],Min,Max,Min,Max).
 
-getbranchinfo(Puzzle,Min,Max):-
-    getbranchinfo(Puzzle,0,0,Min,Max).*/
-
+/* getbranchinfo(+Puzzle,-Min,-Max)
+   Gets branch information : min and maximum x values
+*/
 getbranchinfo(Puzzle,Min,Max):-
     getbranchinfo(Puzzle,99,-99,Min,Max).
 
@@ -165,10 +178,9 @@ getbranchinfo([branch(Distance, _) | Puzzle],Min, Max, FMin, FMax):-
     NewMax is max(Distance,Max),
     getbranchinfo(Puzzle, NewMin, NewMax, FMin, FMax).
 
-
-print_matrix([]).
-print_matrix([H|T]) :- write(H), nl, print_matrix(T).
-
+/* make_empty_matrix(+Width, +Height, -Matrix)
+   Makes an empty matrix a certain Width and Height
+*/
 make_empty_matrix(_,0,[]).    
 make_empty_matrix(Width, Height, [Row|Matrix]):-
     Height > 0,
@@ -182,52 +194,63 @@ make_row(Width, [0 | Row]):-
     Width1 is Width - 1,
     make_row(Width1,Row).  
 
-
-printPuzzleMatrix([]).
+/* printPuzzleMatrix(+Matrix)
+   Prints the print matrix
+*/
+printPuzzleMatrix([]):-nl.
+printPuzzleMatrix([Row,Row2|_Matrix]):-
+    checkiffinished(Row),
+    checkiffinished(Row2),nl. %if there are 2 empty rows in a row, the printing is finished
 printPuzzleMatrix([Row|Matrix]):-
     printPuzzleRow(Row),
     printPuzzleMatrix(Matrix).
 
-printPuzzleRowLine(['-'|Matrix]):-
-    write('----|'),
-    printPuzzleRowLine(Matrix).
-printPuzzleRowLine(Matrix):-
+/* checkiffinished(+Row)
+   Checks if a row is empty
+*/
+checkiffinished([]).
+checkiffinished([0|Row]):-
+    checkiffinished(Row).
+
+/* printPuzzleRowLine(+Row)
+   Prints a horizontal line
+*/
+printPuzzleRowLine(['-'|Row]):-
+    write('----+'),
+    printPuzzleRowLine(Row).
+printPuzzleRowLine(Row):-
     write('  '),
-    printPuzzleRow(Matrix).
+    printPuzzleRow(Row).
 
-
+/* printPuzzleRow(+Row)
+   Prints elemets from the row
+*/
 printPuzzleRow([]):-nl.
-printPuzzleRow([0|Matrix]):-
+printPuzzleRow([0|Row]):-
     write('     '),
-    printPuzzleRow(Matrix).
+    printPuzzleRow(Row).
 
-printPuzzleRow(['-'|Matrix]):-
-    write('  |'),
-    printPuzzleRowLine(Matrix).
-printPuzzleRow(['|'|Matrix]):-
+printPuzzleRow(['-'|Row]):-
+    write('  +'),
+    printPuzzleRowLine(Row).
+printPuzzleRow(['|'|Row]):-
     write('  |  '),
-    printPuzzleRow(Matrix).
-printPuzzleRow(['['|Matrix]):-
+    printPuzzleRow(Row).
+printPuzzleRow(['['|Row]):-
     write('  ^  '),
-    printPuzzleRow(Matrix).
-printPuzzleRow([']'|Matrix]):-
+    printPuzzleRow(Row).
+printPuzzleRow([']'|Row]):-
     write('  v  '),
-    printPuzzleRow(Matrix).
-printPuzzleRow(['l'|Matrix]):-
+    printPuzzleRow(Row).
+printPuzzleRow(['l'|Row]):-
     write(' _|_ '),
-    printPuzzleRow(Matrix).
-printPuzzleRow(['?'|Matrix]):-
+    printPuzzleRow(Row).
+printPuzzleRow(['?'|Row]):-
     write('| ? |'),
-    printPuzzleRow(Matrix).
-printPuzzleRow([Elem|Matrix]):-
+    printPuzzleRow(Row).
+printPuzzleRow([Elem|Row]):-
     write('| '),displayNum(Elem),write('|'),
-    printPuzzleRow(Matrix).
-
-
-displayNum(V):- %if the number has 2 digits doesnt print the space so it can fit
-    V > 9 , write(V).
-displayNum(V):-
-    write(V),write(' ').
+    printPuzzleRow(Row).
 
 
 /** Utility functions **/
@@ -255,3 +278,11 @@ get_elem_at(X-Y, Matrix, Elem):-
     nth0(Y, Matrix, Row),
     nth0(X, Row, Elem).
 get_elem_at(_-_, _, 0).
+
+print_matrix([]).
+print_matrix([H|T]) :- write(H), nl, print_matrix(T).
+
+displayNum(V):- %if the number has 2 digits doesnt print the space so it can fit
+    V > 9 , write(V).
+displayNum(V):-
+    write(V),write(' ').

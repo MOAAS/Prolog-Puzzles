@@ -169,3 +169,22 @@ puzzlec([
         weight(2,5)
     ])
 ]).
+
+puzzled([
+    branch(-1,[
+        weight(-3,1),
+        weight(3,5),
+        branch(-2,[
+            weight(-3,1),
+            weight(3,5)
+        ])
+    ]),
+     branch(-3,[
+        weight(-3,1),
+        weight(3,5)
+    ]),
+    branch(6,[
+        weight(-1,1),
+        weight(1,5)
+    ])
+]).
