@@ -130,21 +130,6 @@ solvePuzzle(Puzzle):-
 checkTimeOutFlag(success).
 checkTimeOutFlag(time_out):- write('Puzzle solving timed out.'), nl, fail.
 
-
-% testestest
-solver:-
-    puzzle8(Puzzle8),
-    puzzle17(Puzzle17),
-    puzzle20(Puzzle20),
-    solvePuzzle(Puzzle8),
-    solvePuzzle(Puzzle17),
-    solvePuzzle(Puzzle20),
-    write('Puzzle 8 solution: '), write(Puzzle8), nl,
-    write('Puzzle 17 solution: '), write(Puzzle17), nl,
-    write('Puzzle 20 solution: '), write(Puzzle20), nl.
-
-
-
 /* Maker */  
 
 /* addNBranches(+N, +Puzzle, -NewPuzzle)
