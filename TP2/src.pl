@@ -232,12 +232,14 @@ getWeightsAndBranches([weight(_D, _W) | Puzzle], [weight(_D, _W) | Weights], Bra
 Randomly makes a puzzle of exactly PuzzleSize weights, by combining the previous functions. Unifies result with Puzzle.
 The puzzle's distances and weights will not be unified.
 Steps:
-- Create all of the branches (amount: between Size/3 and Size/3)
+- Create all of the branches (amount: between Size/4 and Size/3)
 - Fill all the branches, so that each has at least two children
 - With the remaining weights to place, randomly add them to the puzzle.
 */
 makeEmptyPuzzle(Size, Puzzle):-
-    NumBranches is div(Size, 3),
+    MinNumBranches is div(Size, 4),
+    MaxNumBranches is max(MinNumBranches + 1, div(Size, 3)),
+    random(MinNumBranches, MaxNumBranches, NumBranches),
     addNBranches(NumBranches, [], PuzzleBranches),
     fillBranch(PuzzleBranches, FilledPuzzle, NumWeights),
     RemainingWeights is Size - NumWeights,
