@@ -18,7 +18,7 @@ menu:-
         write('3 - Solve Puzzle 3 (Size: 8)'), nl,
         write('4 - Solve Puzzle 4 (Size: 17)'), nl,
         write('5 - Solve Puzzle 5 (Size: 20)'), nl,
-        write('-X - Solve Random Puzzle (Size: X, range: 1-20)'), nl,
+        write('-X - Solve Random Puzzle (Size: X, range: 1-40)'), nl,
         write('0 - Quit'), nl,
         read_option(Option),
         choose_option(Option),
