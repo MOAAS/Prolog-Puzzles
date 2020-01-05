@@ -98,14 +98,34 @@ validPuzzle([branch(Distance, Weights) | Puzzle], Torque, Total):-
 
 validPuzzle(Puzzle):- validPuzzle(Puzzle, 0, _).
 
+/* 
+// Another way of doing it. 
+// Calculates the scalar product between the distances and weights
+// However, distances must not be variables
+validPuzzle(Puzzle):- validPuzzle(Puzzle, _).
+
+validPuzzle(Puzzle, TotalWeight):-
+    validPuzzle(Puzzle, Distances, Weights),
+    scalar_product(Distances, Weights, #=, 0),
+    sum(Weights, #=, TotalWeight).
+
+validPuzzle([], [], []).
+validPuzzle([weight(Distance, Weight) | Puzzle], [Distance | Distances], [Weight | Weights]):-
+    validPuzzle(Puzzle, Distances, Weights).
+
+validPuzzle([branch(Distance, SubBranch) | Puzzle], [Distance | Distances], [SubBranchWeight | Weights]):-
+    validPuzzle(SubBranch, SubBranchWeight),
+    validPuzzle(Puzzle, Distances, Weights).
+*/
+
 /* getPuzzleVars(+Puzzle, -Weights, -Distances)
 
 Unifies Weights with a list containing all puzzle weights.
 Unifies Distances with a list containing all puzzle distances.
 */
 getPuzzleVars([], [], []).
-getPuzzleVars([weight(Distance, Weight) | Puzzle], [Weight | Weights], [Distance | Distances]):-
-    getPuzzleVars(Puzzle, Weights, Distances).
+getPuzzleVars([weight(Di Puzzle], [Weight | Weights], [Distance | Distances]):-
+    getPuzzleVars(Puzzle, Weights, Distanstance, Weight) |ces).
 getPuzzleVars([branch(Distance, SubBranch) | Puzzle], Weights, [Distance | Distances]):-
     getPuzzleVars(SubBranch, BranchWeights, BranchDistances),
     append(BranchWeights, SubWeights, Weights),
