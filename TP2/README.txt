@@ -10,7 +10,7 @@ consult -> src.pl
 3 - Solve Puzzle 3 (Size: 8)
 4 - Solve Puzzle 4 (Size: 17)
 5 - Solve Puzzle 5 (Size: 20)
--X - Solve Random Puzzle (Size: X, range: 1-40)
+-X - Solve Random Puzzle (Size: X, range: 2-40)
 0 - Quit
 
 Numeros positivos -> Puzzles pre-definidos
