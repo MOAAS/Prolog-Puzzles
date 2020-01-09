@@ -124,8 +124,8 @@ Unifies Weights with a list containing all puzzle weights.
 Unifies Distances with a list containing all puzzle distances.
 */
 getPuzzleVars([], [], []).
-getPuzzleVars([weight(Di Puzzle], [Weight | Weights], [Distance | Distances]):-
-    getPuzzleVars(Puzzle, Weights, Distanstance, Weight) |ces).
+getPuzzleVars([weight(Distance, Weight) | Puzzle], [Weight | Weights], [Distance | Distances]):-
+    getPuzzleVars(Puzzle, Weights, Distances).
 getPuzzleVars([branch(Distance, SubBranch) | Puzzle], Weights, [Distance | Distances]):-
     getPuzzleVars(SubBranch, BranchWeights, BranchDistances),
     append(BranchWeights, SubWeights, Weights),
